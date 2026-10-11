@@ -2,7 +2,7 @@
 
 Qué agrega o corrige este PR, en 2-3 líneas.
 
-**Contexto:**
+**Módulo:**
 **Capa(s):**
 
 Closes #
