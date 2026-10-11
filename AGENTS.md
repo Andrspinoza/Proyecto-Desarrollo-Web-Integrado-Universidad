@@ -67,27 +67,26 @@ FKs de conexiones, meetups, comunidades, mensajes ni reportes.
 
 | # | Pieza | Dueño | Desbloquea a | Estado |
 |---|---|---|---|---|
-| B0 | Andamiaje: `pom.xml`, Maven Wrapper, `application.properties`, `compose.yaml`, `shared` (excepciones, manejador de errores, header `X-Student-Id`, Swagger) | André | **Todos** (sin esto nada compila) | 🔨 En curso — André |
-| B1 | `iam`: agregado `University` completo (dominio → JPA → endpoint → test H2). **Es el ejemplo de referencia del repo** | André | Fernando (FK de `students`) y todos como modelo | ⏳ Después de B0 |
-| B2 | `profiles`: `StudentJpaEntity` con FK a `universities` | Fernando | Ubes, Jesús, Mafer (sus FKs a `students`) | ⏳ Espera B1 |
+| B0 | Andamiaje: `pom.xml`, Maven Wrapper, `application.properties`, `compose.yaml`, `shared` (excepciones, manejador de errores, header `X-Student-Id`, Swagger) | André | **Todos** (sin esto nada compila) | ✅ Entregado en `main` |
+| B1 | `iam`: agregado `University` completo (dominio → JPA → endpoint → test H2). **Es el ejemplo de referencia del repo** | André | Fernando (FK de `students`) y todos como modelo | ✅ Entregado en `main` |
+| B2 | `profiles`: `StudentJpaEntity` con FK a `universities` | Fernando | Ubes, Jesús, Mafer (sus FKs a `students`) | 🔨 Puede empezar — Fernando |
 | B3 | Interfaces de las fachadas (solo firmas, guía 6.3) | Cada dueño | Quien las consume | ⏳ Después de cada dominio |
 | B4 | Eventos de dominio de `connections` y `meetups` | Ubes, Jesús | Mafer (`messaging`) | ⏳ |
 
-**Quién sigue ahora:** André termina B0 y lo fusiona en `main` → **todos** traen `main` a su
-rama (sección 5) y arrancan su **dominio con tests** en paralelo → André fusiona B1 →
-Fernando hace B2 **primero** → los demás agregan su persistencia.
+**Quién sigue ahora:** B0 y B1 ya están en `main`. **Todos** traen `main` a su rama
+(sección 5) y arrancan su **dominio con tests** en paralelo. **Fernando hace B2 primero**
+(`StudentJpaEntity`); los demás agregan su persistencia cuando B2 esté en `main`.
 
 | Integrante | Qué hace hoy | Puede empezar cuando | Después |
 |---|---|---|---|
-| André | B0 → B1 | Ya | `Account`, fachadas de `iam` y `subscriptions`, `subscriptions`, revisar PRs |
-| Fernando | Esperar B0 | B0 en `main` | Dominio de `profiles` → **B2 apenas B1 esté en `main`** → resto de persistencia → endpoints → EER y diccionario |
-| Ubes | Esperar B0 | B0 en `main` | Dominio de `moderation` y `connections` → fachadas → persistencia (tras B2) → endpoints → Postman `00-setup` |
-| Jesús | Esperar B0 | B0 en `main` | Dominio de `meetups` con tests → persistencia con bloqueo pesimista (tras B2) → endpoints |
-| Mafer | Esperar B0 | B0 en `main` | `communities` completo (tras B2 para persistencia) → luego `messaging` (tras B3 de Ubes y B4) |
+| André | `Account`, fachadas de `iam` y `subscriptions` | Ya | `subscriptions`, revisar PRs |
+| Fernando | Dominio de `profiles` y **B2** | Ya | Resto de persistencia → endpoints → EER y diccionario |
+| Ubes | Dominio de `moderation` y `connections` | Ya | Fachadas → persistencia (tras B2) → endpoints → Postman `00-setup` |
+| Jesús | Dominio de `meetups` con tests | Ya | Persistencia con bloqueo pesimista (tras B2) → endpoints |
+| Mafer | Dominio de `communities` | Ya | Persistencia (tras B2) → luego `messaging` (tras B3 de Ubes y B4) |
 
-**Mientras esperas B0** puedes leer la guía técnica, mirar el molde del profesor
-(`learning-platform-semana9`) y anotar en papel los agregados, value objects y reglas de tu
-contexto (guía, sección 8). No crees un proyecto Maven propio.
+**Mientras esperas B2** haz lo que no depende de nadie: dominio y tests, resources y
+assemblers, colección de Postman. Toma `iam` como modelo. No crees entidades de otro contexto.
 
 ---
 
@@ -109,7 +108,7 @@ carpetas, pero escribes **tu** contexto, archivo por archivo, entendiendo cada u
 commits progresivos. El profesor revisa quién contribuyó y qué puede explicar.
 
 **¿Dónde veo un ejemplo completo?** `src/main/java/com/utp/quesale/iam/` y su test en
-`src/test/java/com/utp/quesale/iam/` (cuando B1 esté en `main`).
+`src/test/java/com/utp/quesale/iam/`.
 
 **¿Y la capa de aplicación?** Todavía no. El profesor la enseña el 15-oct. Hasta entonces el
 controller usa la interfaz del repositorio de dominio (guía 1.4). Cuando la enseñe, se agrega
@@ -230,7 +229,7 @@ la vez**, esperando confirmación antes de seguir, y al final le dice qué le to
    git push -u origin dev/jesus
    ```
 
-5. **Verificar la API** (cuando B0 esté en `main`), desde la raíz del repo: `./mvnw test`
+5. **Verificar la API**, desde la raíz del repo: `./mvnw test`
    (en Windows `mvnw.cmd test`), luego `./mvnw spring-boot:run` con MySQL encendido y abrir
    http://localhost:8080/swagger-ui.html. Si tu contraseña de MySQL no es `root`, ver la guía,
    sección 2.
@@ -415,3 +414,4 @@ Se llena después de cada revisión. Cada observación genera una tarea o un cam
 |---|---|---|---|
 | 2026-10-08 | André · Claude Code | Versión inicial de las reglas generales | Inicio del desarrollo del backend para el APF2 |
 | 2026-10-11 | André · Claude Code | Repo solo de API con Maven en la raíz (D-15 reemplaza D-11); `X-Student-Id` (D-16 reemplaza D-04); tests H2 (D-14); D-03 pendiente; D-05 decidida; secciones «Estado actual y quién sigue» y «Preguntas frecuentes»; calendario a la semana 11; guía técnica movida a `docs/guia-backend.md` | Indicaciones del profesor del 8 y 11-oct; límite de 32 KB de Codex |
+| 2026-10-11 | André · Claude Code | B0 y B1 marcadas como entregadas en la tabla de estado; Fernando puede empezar B2 | PR #2 fusionado; B1 en el PR siguiente |
