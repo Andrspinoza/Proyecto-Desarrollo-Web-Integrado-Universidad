@@ -1,8 +1,8 @@
 ---
-applyTo: "backend/**"
+applyTo: "src/**,pom.xml"
 ---
 
-Puntero: para cualquier archivo dentro de `backend/`, sigue `backend/AGENTS.md` junto con el
-`AGENTS.md` de la raíz del repositorio.
+Puntero: para cualquier archivo del código, sigue el `AGENTS.md` de la raíz del repositorio y
+la guía técnica `docs/guia-backend.md`.
 
-No agregues reglas aquí: se escriben únicamente en los archivos `AGENTS.md`.
+No agregues reglas aquí: se escriben únicamente en `AGENTS.md` o en la guía.
