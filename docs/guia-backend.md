@@ -1,8 +1,13 @@
-# AGENTS.md — Backend de ¿Qué sale?
+# Guía técnica del backend de ¿Qué sale?
 
-Reglas técnicas del backend. Se leen **junto con** el [`AGENTS.md` raíz](../AGENTS.md), que
-contiene las decisiones (D-NN), el equipo, git, commits y el protocolo de punto de control.
-Nada de aquí se repite allá ni al revés.
+Reglas técnicas de la API. **Lectura obligatoria antes de escribir código.** Se leen **junto
+con** el [`AGENTS.md`](../AGENTS.md) de la raíz, que contiene las decisiones (D-NN), el estado
+actual, quién sigue, git, commits y el protocolo de punto de control. Nada de aquí se repite
+allá ni al revés.
+
+> Esta guía vive en `docs/` y no en un `AGENTS.md` porque Codex, por defecto, solo carga los
+> primeros 32 KB de los `AGENTS.md`. Así el `AGENTS.md` raíz se carga completo y esta guía se
+> lee cuando hace falta.
 
 ---
 
@@ -13,8 +18,9 @@ ejemplo. **Se calca su estructura, su estilo y sus nombres**; solo cambia el dom
 
 | Referencia | Qué aporta | Dónde conseguirla |
 |---|---|---|
-| `learning-platform-semana8` | Capas `domain` e `infrastructure` (molde vigente) | Aula virtual, semana 8 |
+| `learning-platform-semana9` | Capas `domain` e `infrastructure` (molde vigente; igual a la semana 8) | Aula virtual |
 | `sales` | Capa `interfaces`: controllers, resources, assemblers | Aula virtual, semana 2 |
+| **Contexto `iam` de este repo** | **Ejemplo completo dentro del repo**: dominio → persistencia → endpoint → test con H2. **Úsalo como modelo para tu contexto** | `src/main/java/com/utp/quesale/iam/` y su test |
 
 Los fragmentos de esta sección reproducen ese estilo para que nadie dependa de tener los
 archivos. Si el profesor publica una versión nueva, se actualiza esta sección y su registro.
@@ -158,6 +164,10 @@ y un método `replaceXxxItems(...)` en la entidad padre que fija la referencia i
 
 ### 1.4 Capa `interfaces` (estilo `sales`)
 
+**Hoy, sin capa de aplicación** (indicación del profesor: el endpoint va por el adapter). El
+controller recibe por constructor la **interfaz del repositorio de dominio**; Spring le inyecta
+el adapter. El controller crea el agregado y lo guarda: **las reglas siguen en el agregado**.
+
 ```java
 public record CreateMeetupResource(
         @NotBlank @Size(max = 100) String title,
@@ -167,32 +177,36 @@ public record CreateMeetupResource(
 
 public class MeetupResourceAssembler {
     public static MeetupResource toResourceFromEntity(Meetup meetup) { /* ... */ }
-    public static CreateMeetupCommand toCommandFromResource(Long accountId, CreateMeetupResource r) { /* ... */ }
 }
 
 @RestController
 @RequestMapping("/api/v1/meetups")
 @Tag(name = "Meetups")
 public class MeetupsController {
-    private final MeetupCommandService commandService;
-    private final MeetupQueryService queryService;
+    private final MeetupRepository meetupRepository;    // interfaz del dominio; Spring inyecta el adapter
+    private final StudentRepository studentRepository;
 
-    public MeetupsController(MeetupCommandService commandService, MeetupQueryService queryService) {
-        this.commandService = commandService;
-        this.queryService = queryService;
+    public MeetupsController(MeetupRepository meetupRepository, StudentRepository studentRepository) {
+        this.meetupRepository = meetupRepository;
+        this.studentRepository = studentRepository;
     }
 
     @PostMapping
     @Operation(summary = "Crear un meetup")
-    public ResponseEntity<MeetupResource> create(@RequestHeader(RequestHeaders.ACCOUNT_ID) Long accountId,
+    public ResponseEntity<MeetupResource> create(@RequestHeader(RequestHeaders.STUDENT_ID) Long studentId,
                                                  @Valid @RequestBody CreateMeetupResource resource) {
-        Long id = commandService.handle(MeetupResourceAssembler.toCommandFromResource(accountId, resource));
-        Meetup meetup = queryService.handle(new GetMeetupByIdQuery(id));
-        return ResponseEntity.created(URI.create("/api/v1/meetups/" + id))
-                .body(MeetupResourceAssembler.toResourceFromEntity(meetup));
+        Student organizer = studentRepository.findById(studentId)
+                .orElseThrow(() -> new StudentNotFoundException(studentId));
+        Meetup saved = meetupRepository.save(new Meetup(organizer.getId(), organizer.getUniversityId(), /* ... */));
+        return ResponseEntity.created(URI.create("/api/v1/meetups/" + saved.getId()))
+                .body(MeetupResourceAssembler.toResourceFromEntity(saved));
     }
 }
 ```
+
+**Cuando el profesor enseñe la capa de aplicación** (clase del 15-oct), la coordinación sale del
+controller y pasa a un servicio de aplicación: el controller llamará al servicio y el servicio al
+repositorio. El dominio y la persistencia **no cambian**. Ver sección 4, `application`.
 
 ---
 
@@ -211,7 +225,8 @@ Spring Boot **4.1.1** · Java 21 · Maven con Maven Wrapper · Packaging Jar · 
 | `spring-boot-starter-data-jpa-test`, `spring-boot-starter-webmvc-test` (test) | Profesor | Pruebas |
 | `spring-boot-starter-validation` | `sales` | `@Valid`, `@NotBlank`, `@Size` en resources |
 | `org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1` | Equipo (D-06) | Swagger UI; la 3.1.1 está compilada contra Boot 4.1 |
-| `spring-security-crypto` | Equipo | Solo `BCryptPasswordEncoder` para `password_hash`; **no** activa Spring Security |
+| `com.h2database:h2` (test) | Profesor (D-14) | Base en memoria para las pruebas de persistencia |
+| `spring-security-crypto` | Equipo | Solo `BCryptPasswordEncoder` para `password_hash`. **Se agrega cuando André implemente `Account`**; no activa Spring Security |
 
 El `maven-compiler-plugin` lleva `lombok` en `annotationProcessorPaths`, igual que el pom del
 profesor. **No se agregan ni actualizan dependencias** sin avisar a André y registrarlo.
@@ -220,9 +235,9 @@ profesor. **No se agregan ni actualizan dependencias** sin avisar a André y reg
 
 ```properties
 spring.application.name=quesale-api
-spring.datasource.url=jdbc:mysql://localhost:${MYSQL_PORT:3306}/quesale?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-spring.datasource.username=root
-spring.datasource.password=root
+spring.datasource.url=jdbc:mysql://localhost:${DB_PORT:3306}/quesale?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+spring.datasource.username=${DB_USERNAME:root}
+spring.datasource.password=${DB_PASSWORD:root}
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
@@ -233,8 +248,13 @@ springdoc.swagger-ui.path=/swagger-ui.html
 springdoc.api-docs.path=/v3/api-docs
 ```
 
-`root/root` es solo para desarrollo local, como en el ejemplo del profesor. Fuera de la máquina
-local las credenciales van en variables de entorno.
+**Usuario y contraseña de MySQL:** por defecto `root`/`root`, como el ejemplo del profesor. Si
+tu MySQL tiene otra contraseña, **no edites el archivo**: pásala por variable de entorno al
+arrancar. En PowerShell:
+
+```powershell
+$env:DB_PASSWORD = "tu-contraseña"; ./mvnw spring-boot:run
+```
 
 ---
 
@@ -301,9 +321,16 @@ Cada carpeta se crea **cuando se implementa** algo que va en ella; no se crean c
   para tener FKs reales (D-05). Es el único lugar donde un contexto importa algo de otro, además
   de fachadas y eventos.
 - Restricciones de la base de datos declaradas en la entidad: `@UniqueConstraint`, `nullable`,
-  `length` y `@org.hibernate.annotations.Check` para los `CHECK`.
+  `length` y, para los `CHECK`, `@Table(check = @CheckConstraint(name = "...", constraint = "..."))`
+  (ver `StudentJpaEntity` de la demo o la sección 8).
+- **Cada adapter tiene su prueba `@DataJpaTest` sobre H2** (D-14): guarda un objeto de dominio,
+  lo vuelve a leer y verifica que no se perdió nada. Modelo: el test de `iam` del repo.
 
-### `application` — provisional (D-03)
+### `application` — pendiente (D-03)
+
+**Todavía no se escribe.** El profesor la enseña en la clase del 15-oct. Hasta entonces el
+controller coordina directamente con la interfaz del repositorio (sección 1.4). Lo que sigue es
+la idea general; se reemplaza por la versión del profesor cuando la muestre:
 
 - `XCommandService` / `XQueryService` son interfaces en `domain/services`; sus implementaciones
   `@Service` van en `application/internal`. Comandos con `@Transactional`, consultas con
@@ -320,8 +347,12 @@ Cada carpeta se crea **cuando se implementa** algo que va en ella; no se crean c
 - Resources de entrada con `jakarta.validation` y `@Valid` en el controller.
 - Respuestas: `201 Created` con `Location` al crear, `200` al consultar o modificar, `204` sin
   cuerpo. Cada controller lleva `@Tag` y cada endpoint `@Operation(summary = "...")`.
-- La identidad provisional llega por `@RequestHeader(RequestHeaders.ACCOUNT_ID) Long accountId`
-  (D-04). El controller no decide permisos: pasa el `accountId` al comando.
+- La identidad provisional llega por `@RequestHeader(RequestHeaders.STUDENT_ID) Long studentId`
+  (D-04). El controller no decide permisos: le pasa el `studentId` al método del agregado
+  (`meetup.cancel(studentId)`) y **el agregado** decide.
+- Mientras no exista la capa de aplicación, los endpoints que **modifican** un agregado ya
+  guardado llevan `@Transactional` en el método del controller (concesión temporal; pasa al
+  servicio de aplicación cuando el profesor la enseñe).
 
 ### Entre contextos
 
@@ -375,7 +406,8 @@ public abstract class AbstractDomainAggregateRoot<T extends AbstractDomainAggreg
 }
 ```
 
-Uso en un servicio de aplicación:
+Uso en un servicio de aplicación (cuando exista esa capa; hasta entonces los eventos solo se
+declaran y se prueban en el dominio, nadie los escucha todavía):
 
 ```java
 @Override
@@ -411,10 +443,11 @@ public record ErrorResource(int status, String error, String message, String pat
 
 ### 6.2 Identidad provisional (D-04)
 
-`RequestHeaders.ACCOUNT_ID = "X-Account-Id"`. Las operaciones de estudiante resuelven el
-`studentId` con `ProfilesContextFacade.studentIdOfAccount(accountId)`; las de administrador
-verifican `IamContextFacade.isAdmin(accountId)` y lanzan `ForbiddenOperationException` si no.
-Cuando llegue JWT, solo cambia de dónde sale el `accountId`.
+`RequestHeaders.STUDENT_ID = "X-Student-Id"`: en Swagger o Postman se envía el `id` del
+estudiante que «hace» la petición. Es lo más simple mientras no exista login. Cuando el profesor
+enseñe Spring Security + JWT, el `studentId` saldrá del token y este header desaparece; el
+dominio no cambia. Las operaciones de administrador se agregan con `iam` completo
+(`IamContextFacade.isAdmin`).
 
 ### 6.3 Fachadas — firmas fijas (contrato primero)
 
@@ -490,6 +523,13 @@ organizador ocupa un cupo).
 Para cada contexto: agregados, reglas que **deben tener test** y endpoints (todos bajo
 `/api/v1`). Las tablas van en inglés, plural y `snake_case`.
 
+> **Alcance para el avance del 15-oct y la entrega de la semana 11.** El profesor pidió *todos
+> los agregados con su persistencia* y endpoints expuestos. Prioridad por agregado:
+> 1) dominio + test; 2) persistencia + test H2; 3) **crear, obtener por id y listar**; 4) una o
+> dos acciones clave (p. ej. `confirm`, `cancel`, `accept`). El resto de endpoints de las tablas
+> se agrega después, cuando exista la capa de aplicación. Lo marcado *(admin)* se expone sin
+> verificar rol hasta tener `Account`.
+
 ### 8.1 `iam` — André
 
 - **`University`**: `name` (único, ≤120), `emailDomain` (único, minúsculas, p. ej. `utp.edu.pe`),
@@ -522,6 +562,10 @@ Para cada contexto: agregados, reglas que **deben tener test** y endpoints (todo
   hija **`Profile`** (0..1): `career` (VO `Career` ≤80), `cycle` (VO `StudyCycle` 1–10),
   `description` (≤500), `visibility`, `interestIds` y `skillIds` (máximo 15 cada uno, sin
   repetidos).
+- **Mientras `Account` no exista** (lo hace André después de `University`), `Student` se crea con
+  `universityId` y su correo institucional, como en la demo; `accountId` se agrega cuando llegue
+  `Account`. Lo único que bloquea a los demás es **B2: `StudentJpaEntity` con FK a
+  `universities`**.
 - Métodos: `createProfile(...)`, `updateProfile(...)`, `addInterest`, `removeInterest`,
   `addSkill`, `removeSkill`, `isVisibleTo(viewerStudentId, connected)`.
 - **Servicio de dominio `AffinityCalculator`**: compara dos perfiles y devuelve el VO
@@ -686,14 +730,17 @@ Regla general y punto de control: sección 6 del `AGENTS.md` raíz. Aquí está 
 
 ### 9.1 Andamiaje — André (B0)
 
-1. `build(backend): agregar pom y Maven Wrapper`
-2. `build(backend): agregar clase principal y application.properties`
-3. `chore(backend): agregar compose.yaml con MySQL`
+1. `build: agregar pom y Maven Wrapper`
+2. `build: agregar clase principal y application.properties`
+3. `chore: agregar compose.yaml con MySQL`
 4. `feat(shared): agregar AbstractDomainAggregateRoot con pullDomainEvents`
 5. `feat(shared): agregar excepciones base del dominio`
 6. `feat(shared): agregar GlobalExceptionHandler y ErrorResource`
-7. `feat(shared): agregar header provisional X-Account-Id`
+7. `feat(shared): agregar header provisional X-Student-Id`
 8. `feat(shared): configurar Swagger con springdoc`
+
+B1 (André, `iam` → `University`) sigue el mismo orden de la sección 9.2 y queda como **ejemplo
+completo en el repo**.
 
 ### 9.2 Cada contexto — de abajo hacia arriba
 
@@ -705,10 +752,11 @@ Cada línea es **uno o más commits pequeños**, nunca una capa entera de golpe:
 4. Eventos y excepciones.
 5. Contrato de repositorio.
 6. Interfaz de la fachada (`interfaces/acl`) — **B3, publicar temprano**.
-7. Entidades JPA → `JpaRepository` → mapper → adapter.
-8. Commands, queries y contratos de servicios → implementaciones → implementación de la fachada.
-9. Resources → assemblers → controller (un commit por grupo de endpoints).
-10. Colección Postman del contexto.
+7. Entidades JPA → `JpaRepository` → mapper → adapter → **test `@DataJpaTest` con H2**.
+8. Resources → assemblers → controller (un commit por grupo de endpoints).
+9. Colección Postman del contexto.
+10. **Después del 15-oct:** capa de aplicación según la versión del profesor (el controller pasa
+    a llamar al servicio) e implementación de la fachada.
 
 Ejemplo `meetups`:
 
@@ -724,8 +772,7 @@ feat(meetups): declarar MeetupRepository en el dominio
 feat(meetups): agregar entidades JPA de meetup y participacion
 feat(meetups): agregar repositorio JPA con bloqueo pesimista
 feat(meetups): agregar mapper y adapter de persistencia
-feat(meetups): agregar commands, queries y contratos de servicios
-feat(meetups): implementar servicios de aplicacion de meetups
+test(meetups): probar el adapter de meetups con H2
 feat(meetups): agregar resources y assemblers
 feat(meetups): exponer endpoints de meetups
 feat(meetups): exponer endpoints de participacion
@@ -739,12 +786,17 @@ test(meetups): agregar coleccion Postman de meetups
 | Nivel | Cómo | Obligatorio |
 |---|---|---|
 | Dominio | JUnit 5 **sin Spring**, en `src/test/java/com/utp/quesale/<contexto>/domain/` | Cada regla marcada «con test» en la sección 8 |
+| Persistencia | `@DataJpaTest` + `@Import(adapter, mapper)` sobre **H2 en memoria** (D-14), en `src/test/java/com/utp/quesale/<contexto>/infrastructure/` | Cada adapter: guardar, leer y una consulta propia |
 | API | Swagger UI: http://localhost:8080/swagger-ui.html | Cada endpoint, caso de éxito y de error |
 | API | Postman o Thunder Client con las colecciones de `docs/api/` | Cada endpoint |
 
-- `./mvnw test` antes de cada PR. El test `contextLoads` necesita MySQL levantado.
-- Colecciones en `backend/docs/api/`, **una por contexto** para evitar conflictos:
-  `quesale.postman_environment.json` (variables `baseUrl`, `adminAccountId`, `accountId`),
+- `./mvnw test` antes de cada PR. **No necesita MySQL**: los tests usan H2.
+- `@DataJpaTest` se importa de `org.springframework.boot.data.jpa.test.autoconfigure` (Boot 4).
+- Si tu entidad JPA tiene FK a otra (`@ManyToOne`), el `@Import` incluye también el adapter y el
+  mapper de esa otra para crear el dato previo (ej.: para guardar un `Student` primero se guarda
+  una `University`).
+- Colecciones en `docs/api/`, **una por contexto** para evitar conflictos:
+  `quesale.postman_environment.json` (variables `baseUrl`, `studentId`),
   `00-setup.postman_collection.json` (Ubes: crea universidad, cuentas, estudiantes e intereses
   en orden para la demo) y `<contexto>.postman_collection.json`. Formato Postman v2.1, que
   Thunder Client importa directamente.
@@ -757,7 +809,11 @@ test(meetups): agregar coleccion Postman de meetups
 
 ### 11.1 MySQL local
 
-`backend/compose.yaml`:
+Dos opciones, la que tengas:
+
+- **MySQL instalado en Windows** (servicio `MySQL80`): no necesitas Docker. Si tu contraseña de
+  `root` no es `root`, pásala con `DB_PASSWORD` (sección 2).
+- **Docker**: `compose.yaml` en la raíz del repo:
 
 ```yaml
 services:
@@ -768,7 +824,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: quesale
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${DB_PORT:-3306}:3306"
     volumes:
       - quesale-mysql-data:/var/lib/mysql
 
@@ -776,8 +832,8 @@ volumes:
   quesale-mysql-data:
 ```
 
-- Si ya tienes MySQL instalado en el puerto 3306, usa otro: `MYSQL_PORT=3307 docker compose up -d`
-  y arranca la API con la misma variable.
+- Si ya tienes MySQL instalado en el puerto 3306 y quieres además el de Docker, usa otro puerto:
+  `$env:DB_PORT = "3307"; docker compose up -d` y arranca la API en la misma terminal.
 - `ddl-auto=update` no borra columnas viejas. Si cambias una entidad y algo falla:
   `DROP DATABASE quesale;` y reinicia la API.
 
@@ -853,3 +909,4 @@ ejecuta cuando el curso llegue a despliegue o el profesor lo pida. Responsable: 
 | Fecha | Quién (persona · agente) | Cambio | Motivo |
 |---|---|---|---|
 | 2026-10-08 | André · Claude Code | Versión inicial: molde, capas, contextos, endpoints, base de datos | Inicio del desarrollo para el APF2 |
+| 2026-10-11 | André · Claude Code | Pasa de `backend/AGENTS.md` a `docs/guia-backend.md` con rutas en la raíz; header `X-Student-Id`; controller con repositorio mientras no exista la capa de aplicación; tests H2 por adapter; alcance por agregado; `iam` del repo como ejemplo | Repos separados (D-15), indicaciones del profesor del 8 y 11-oct, límite de 32 KB de Codex |
