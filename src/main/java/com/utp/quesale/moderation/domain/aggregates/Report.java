@@ -29,12 +29,14 @@ public class Report extends AbstractDomainAggregateRoot<Report> {
     public Report(Long id, Long reporterId, ReportTargetType targetType, Long targetId, ReportReason reason,
                   String detail, ReportStatus status, Instant createdAt, Long reviewedByAccountId,
                   Instant reviewedAt, String resolution) {
-        if (reporterId == null) throw new IllegalArgumentException("Reporter ID is required");
+        validateOptionalPositiveId(id, "Report ID");
+        validateRequiredPositiveId(reporterId, "Reporter ID");
         if (targetType == null) throw new IllegalArgumentException("Target type is required");
-        if (targetId == null) throw new IllegalArgumentException("Target ID is required");
+        validateRequiredPositiveId(targetId, "Target ID");
         if (reason == null) throw new IllegalArgumentException("Report reason is required");
         if (status == null) throw new IllegalArgumentException("Report status is required");
         if (createdAt == null) throw new IllegalArgumentException("Created at is required");
+        validateOptionalPositiveId(reviewedByAccountId, "Reviewer account ID");
 
         String validatedResolution = status == ReportStatus.OPEN
                 ? validateOptionalText(resolution, "Resolution")
@@ -94,6 +96,15 @@ public class Report extends AbstractDomainAggregateRoot<Report> {
     private static String validateRequiredText(String value, String fieldName) {
         if (value == null || value.isBlank()) throw new IllegalArgumentException(fieldName + " is required");
         return validateOptionalText(value, fieldName);
+    }
+
+    private static void validateOptionalPositiveId(Long value, String fieldName) {
+        if (value != null && value <= 0) throw new IllegalArgumentException(fieldName + " must be positive");
+    }
+
+    private static void validateRequiredPositiveId(Long value, String fieldName) {
+        if (value == null) throw new IllegalArgumentException(fieldName + " is required");
+        validateOptionalPositiveId(value, fieldName);
     }
 
     public Long getId() {

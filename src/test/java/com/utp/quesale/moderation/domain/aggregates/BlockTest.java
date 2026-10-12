@@ -26,5 +26,7 @@ class BlockTest {
     void requiresBothStudentIds() {
         assertThrows(IllegalArgumentException.class, () -> new Block(null, 2L));
         assertThrows(IllegalArgumentException.class, () -> new Block(1L, null));
+        assertThrows(IllegalArgumentException.class, () -> new Block(0L, 2L));
+        assertThrows(IllegalArgumentException.class, () -> new Block(1L, -2L));
     }
 }

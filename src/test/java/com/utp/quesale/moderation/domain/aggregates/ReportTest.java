@@ -37,6 +37,14 @@ class ReportTest {
     }
 
     @Test
+    void rejectsNonPositiveTargetId() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Report(1L, ReportTargetType.STUDENT, 0L, ReportReason.OTHER, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> new Report(1L, ReportTargetType.STUDENT, -2L, ReportReason.OTHER, null));
+    }
+
+    @Test
     void reviewsAnOpenReportAndStoresTheDecision() {
         Report report = new Report(1L, ReportTargetType.MESSAGE, 7L, ReportReason.SPAM, null);
 

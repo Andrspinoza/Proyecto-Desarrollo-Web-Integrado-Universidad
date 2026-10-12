@@ -16,8 +16,9 @@ public class Block extends AbstractDomainAggregateRoot<Block> {
     }
 
     public Block(Long id, Long blockerId, Long blockedId, Instant createdAt) {
-        if (blockerId == null) throw new IllegalArgumentException("Blocker ID is required");
-        if (blockedId == null) throw new IllegalArgumentException("Blocked ID is required");
+        validateOptionalPositiveId(id, "Block ID");
+        validateRequiredPositiveId(blockerId, "Blocker ID");
+        validateRequiredPositiveId(blockedId, "Blocked ID");
         if (blockerId.equals(blockedId)) throw new IllegalArgumentException("A student cannot block themselves");
         if (createdAt == null) throw new IllegalArgumentException("Created at is required");
 
@@ -25,6 +26,15 @@ public class Block extends AbstractDomainAggregateRoot<Block> {
         this.blockerId = blockerId;
         this.blockedId = blockedId;
         this.createdAt = createdAt;
+    }
+
+    private static void validateOptionalPositiveId(Long value, String fieldName) {
+        if (value != null && value <= 0) throw new IllegalArgumentException(fieldName + " must be positive");
+    }
+
+    private static void validateRequiredPositiveId(Long value, String fieldName) {
+        if (value == null) throw new IllegalArgumentException(fieldName + " is required");
+        validateOptionalPositiveId(value, fieldName);
     }
 
     public Long getId() {
