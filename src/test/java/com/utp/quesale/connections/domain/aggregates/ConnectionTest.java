@@ -32,6 +32,8 @@ class ConnectionTest {
         assertThrows(IllegalArgumentException.class, () -> new Connection(null, 2L));
         assertThrows(IllegalArgumentException.class, () -> new Connection(1L, null));
         assertThrows(IllegalArgumentException.class, () -> new Connection(1L, 1L));
+        assertThrows(IllegalArgumentException.class, () -> new Connection(0L, 2L));
+        assertThrows(IllegalArgumentException.class, () -> new Connection(1L, -2L));
     }
 
     @Test
@@ -44,6 +46,8 @@ class ConnectionTest {
                 3L, 1L, 2L, ConnectionStatus.ACCEPTED, createdAt, null));
         assertThrows(IllegalArgumentException.class, () -> new Connection(
                 3L, 1L, 2L, ConnectionStatus.REJECTED, createdAt, createdAt.minusSeconds(1)));
+        assertThrows(IllegalArgumentException.class, () -> new Connection(
+                0L, 1L, 2L, ConnectionStatus.PENDING, createdAt, null));
     }
 
     @Test
@@ -63,6 +67,16 @@ class ConnectionTest {
         Connection connection = new Connection(1L, 2L);
 
         assertThrows(IllegalStateException.class, connection::markAsCreated);
+    }
+
+    @Test
+    void requiresSavedConnectionBeforeAcceptanceEvent() {
+        Connection connection = new Connection(1L, 2L);
+
+        assertThrows(IllegalStateException.class, () -> connection.accept(2L));
+        assertEquals(ConnectionStatus.PENDING, connection.getStatus());
+        assertNull(connection.getRespondedAt());
+        assertEquals(0, connection.pullDomainEvents().size());
     }
 
     @Test

@@ -24,8 +24,9 @@ public class Connection extends AbstractDomainAggregateRoot<Connection> {
 
     public Connection(Long id, Long requesterId, Long recipientId, ConnectionStatus status,
                       Instant createdAt, Instant respondedAt) {
-        if (requesterId == null) throw new IllegalArgumentException("Requester ID is required");
-        if (recipientId == null) throw new IllegalArgumentException("Recipient ID is required");
+        validateOptionalPositiveId(id, "Connection ID");
+        validateRequiredPositiveId(requesterId, "Requester ID");
+        validateRequiredPositiveId(recipientId, "Recipient ID");
         if (requesterId.equals(recipientId)) {
             throw new IllegalArgumentException("A student cannot connect with themselves");
         }
@@ -63,6 +64,9 @@ public class Connection extends AbstractDomainAggregateRoot<Connection> {
     public void accept(Long byStudentId) {
         ensurePending();
         ensureRecipient(byStudentId);
+        if (id == null) {
+            throw new IllegalStateException("Connection must be saved before it can be accepted");
+        }
 
         respondedAt = Instant.now();
         status = ConnectionStatus.ACCEPTED;
@@ -79,7 +83,7 @@ public class Connection extends AbstractDomainAggregateRoot<Connection> {
 
     public void cancel(Long byStudentId) {
         ensurePending();
-        if (byStudentId == null) throw new IllegalArgumentException("Student ID is required");
+        validateRequiredPositiveId(byStudentId, "Student ID");
         if (!requesterId.equals(byStudentId)) {
             throw new ConnectionOperationForbiddenException("Only the requester can cancel the connection");
         }
@@ -95,10 +99,19 @@ public class Connection extends AbstractDomainAggregateRoot<Connection> {
     }
 
     private void ensureRecipient(Long byStudentId) {
-        if (byStudentId == null) throw new IllegalArgumentException("Student ID is required");
+        validateRequiredPositiveId(byStudentId, "Student ID");
         if (!recipientId.equals(byStudentId)) {
             throw new ConnectionOperationForbiddenException("Only the recipient can respond to the connection");
         }
+    }
+
+    private static void validateOptionalPositiveId(Long value, String fieldName) {
+        if (value != null && value <= 0) throw new IllegalArgumentException(fieldName + " must be positive");
+    }
+
+    private static void validateRequiredPositiveId(Long value, String fieldName) {
+        if (value == null) throw new IllegalArgumentException(fieldName + " is required");
+        validateOptionalPositiveId(value, fieldName);
     }
 
     public Long getId() {
