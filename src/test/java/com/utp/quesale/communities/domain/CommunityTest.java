@@ -1,6 +1,8 @@
 package com.utp.quesale.communities.domain;
 
 import com.utp.quesale.communities.domain.aggregates.Community;
+import com.utp.quesale.communities.domain.entities.CommunityPost;
+import com.utp.quesale.communities.domain.entities.Membership;
 import com.utp.quesale.communities.domain.exceptions.AlreadyMemberException;
 import com.utp.quesale.communities.domain.exceptions.LastAdminCannotLeaveException;
 import com.utp.quesale.communities.domain.exceptions.NotCommunityAdminException;
@@ -8,6 +10,9 @@ import com.utp.quesale.communities.domain.exceptions.NotMemberException;
 import com.utp.quesale.communities.domain.valueobjects.MemberRole;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -134,5 +139,35 @@ class CommunityTest {
         Community community = community();
 
         assertThrows(UnsupportedOperationException.class, () -> community.getMemberships().clear());
+    }
+
+    private Community savedCommunity() {
+        return new Community(1L, UNIVERSITY_ID, "Club de ajedrez", null, CREATOR_ID, Instant.now(),
+                List.of(new Membership(CREATOR_ID, MemberRole.ADMIN)));
+    }
+
+    @Test
+    @DisplayName("Un miembro publica en la comunidad")
+    void memberCanPublish() {
+        Community community = savedCommunity();
+        community.join(STUDENT_ID);
+
+        CommunityPost post = community.publish(STUDENT_ID, "Hola a todos");
+
+        assertEquals(1L, post.getCommunityId());
+        assertEquals(STUDENT_ID, post.getAuthorId());
+        assertEquals("Hola a todos", post.getContent());
+    }
+
+    @Test
+    @DisplayName("Quien no es miembro no puede publicar")
+    void nonMemberCannotPublish() {
+        assertThrows(NotMemberException.class, () -> savedCommunity().publish(STUDENT_ID, "Hola"));
+    }
+
+    @Test
+    @DisplayName("No se publica en una comunidad que todavía no se guardó")
+    void cannotPublishBeforeSaving() {
+        assertThrows(IllegalStateException.class, () -> community().publish(CREATOR_ID, "Hola"));
     }
 }
