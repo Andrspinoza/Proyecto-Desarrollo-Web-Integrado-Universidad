@@ -1,5 +1,6 @@
 package com.utp.quesale.communities.domain.aggregates;
 
+import com.utp.quesale.communities.domain.entities.CommunityPost;
 import com.utp.quesale.communities.domain.entities.Membership;
 import com.utp.quesale.communities.domain.exceptions.AlreadyMemberException;
 import com.utp.quesale.communities.domain.exceptions.LastAdminCannotLeaveException;
@@ -66,6 +67,13 @@ public class Community extends AbstractDomainAggregateRoot<Community> {
         if (!isAdmin(requesterId)) throw new NotCommunityAdminException(requesterId);
         this.name = validName(name);
         this.description = validDescription(description);
+    }
+
+    // Solo los miembros publican; la comunidad ya debe estar guardada para tener id
+    public CommunityPost publish(Long authorId, String content) {
+        if (id == null) throw new IllegalStateException("Community must be saved before publishing");
+        if (!isMember(authorId)) throw new NotMemberException(authorId);
+        return new CommunityPost(id, authorId, content);
     }
 
     public boolean isMember(Long studentId) {
