@@ -83,7 +83,7 @@ FKs de conexiones, meetups, comunidades, mensajes ni reportes.
 | Fernando | Dominio de `profiles` y **B2** | Ya | Resto de persistencia → endpoints → EER y diccionario |
 | Ubes | Dominio de `moderation` y `connections` | Ya | Fachadas → persistencia (tras B2) → endpoints → Postman `00-setup` |
 | Jesús | Dominio de `meetups` con tests | Ya | Persistencia con bloqueo pesimista (tras B2) → endpoints |
-| Mafer | Dominio de `communities` | Ya | Persistencia (tras B2) → luego `messaging` (tras B3 de Ubes y B4) |
+| Mafer | Dominio, contratos de repositorio y resources de `communities` ✅ (en PR) | B2 en `main` | Persistencia → endpoints → luego `messaging` (tras B3 de Ubes y B4) |
 
 **Mientras esperas B2** haz lo que no depende de nadie: dominio y tests, resources y
 assemblers, colección de Postman. Toma `iam` como modelo. No crees entidades de otro contexto.
