@@ -1,4 +1,4 @@
-package com.utp.quesale.profiles.domain.model.valueobjects;
+package com.utp.quesale.profiles.domain.valueobjects;
 
 public record StudyCycle(int value) {
     public StudyCycle {

@@ -1,4 +1,4 @@
-package com.utp.quesale.profiles.domain.model.valueobjects;
+package com.utp.quesale.profiles.domain.valueobjects;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
