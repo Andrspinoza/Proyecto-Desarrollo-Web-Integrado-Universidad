@@ -16,15 +16,25 @@ Se actualiza en cada fusión a `main`. Última actualización: 2026-10-16.
 | B6 | `Message` mínimo con `MessageSentEvent` | Mafer | ⏳ | El WebSocket |
 | B7 | WebSocket: configuración STOMP, manejador del evento y `/chat-test.html` | André | ⏳ | Chat en tiempo real |
 
-## Qué hace cada integrante ahora
+## Qué falta para la entrega del 22-oct
 
-| Integrante | Ahora | Después |
-|---|---|---|
-| **André** | B5; luego `Account` y B7 | `subscriptions`, revisar PR |
-| **Fernando** | Repositorio de dominio, mapper, adapter y test H2 de `Student` | Perfil, intereses y habilidades; capa de aplicación (tras B5) |
-| **Ubes** | Dominio de `connections` en su rama aparte; persistencia de `moderation` (B2 ya está) | Persistencia de `connections`; capa de aplicación (tras B5) |
-| **Mafer** | Cerrar el PR #4 de `communities`; persistencia de `communities` (B2 ya está) y controllers | B6 (`Message` mínimo); capa de aplicación (tras B5) |
-| **Jesús** | Dominio de `meetups` con tests, ya | Persistencia con bloqueo pesimista (B2 ya está) |
+Cada agregado avanza por niveles: dominio con tests → persistencia con test H2 → crear, obtener y
+listar → una o dos acciones clave. Endpoints simples, sin sobreingeniería. Swagger es requisito.
+
+| Integrante | Módulo | Ya está en `main` | Falta para el 22-oct |
+|---|---|---|---|
+| **André** | `iam`, `shared` | `University` completo; base de `shared` | **B5**; `Account` con BCrypt; clase base pura y despachador de eventos; **B7** (WebSocket); pruebas en Swagger; tag `v0.2.0` |
+| **Fernando** | `profiles` | `Student`, `FullName`, `StudentRecordId`, `StudyCycle`, `StudentJpaEntity` | `StudentRepository`, mapper, adapter y test H2; `Profile` (carrera, ciclo, descripción, visibilidad), `Interest` y `Skill` con su persistencia; endpoints de estudiante; **EER Diagram y diccionario de datos** |
+| **Ubes** | `connections`, `moderation` | Dominio, repositorios, resources y colección Postman de `moderation` | `connections`: dominio, repositorio, resources y Postman en su PR; persistencia con test H2 de ambos; endpoints de crear, listar y aceptar conexión, y de reportar y bloquear; `00-setup` de Postman |
+| **Mafer** | `communities`, `messaging` | Dominio completo de `communities` (con `promote`), contratos y resources | Persistencia con test H2 (comunidades, miembros, publicaciones); endpoints de crear, listar, unirse y publicar; **B6** (`Message` mínimo y `MessageSentEvent`) |
+| **Jesús** | `meetups` | Nada todavía | Todo: dominio con tests (cupo, organizador, cancelación; eventos con `meetupId`), persistencia con bloqueo pesimista y test H2, endpoints de crear, listar, solicitar y confirmar participación, y cancelar |
+| **Todos** | Capa de aplicación | — | Cuando B5 esté en `main`: commands, queries, handlers, DTOs y assembler de su módulo, copiando `iam`; el controller pasa a usar los handlers |
+
+## Después de la entrega
+
+Fachadas entre contextos y reglas que cruzan módulos (no escribir a un bloqueado, límites del plan),
+`subscriptions`, notificaciones en tiempo real, `markAsRead`, JWT, búsqueda con filtros (JPQL) y el
+frontend Angular en su propio repositorio.
 
 ## Capa de aplicación: espera a B5
 
@@ -36,5 +46,5 @@ Mientras tanto, termina dominio, persistencia con test H2 y, si te toca, resourc
 ## Reglas de este panel
 
 - Solo André edita este archivo. Cada dueño edita únicamente `docs/seguimiento/<modulo>.md`.
-- El dueño de un módulo actualiza su archivo en el último commit de cada PR.
+- **Al terminar cada PR**, el dueño actualiza su archivo de módulo en el último commit (bloque, estado y número de PR); si el trabajo se reparte en varios PR, lo hace en cada uno.
 - Un agente sin `gh` sabe qué hay hecho con este panel, el archivo del módulo y `git log origin/main`.
