@@ -1,0 +1,81 @@
+{
+  "info": {
+    "_postman_id": "b3be7d71-cadd-47b1-9b99-26d5c930cc15",
+    "name": "Que Sale - 00 Setup",
+    "description": "Preparación inicial para la demo. Esta primera etapa registra una universidad; las solicitudes de cuentas, estudiantes e intereses se agregarán cuando sus contratos estén implementados y disponibles.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "universityName",
+      "value": "Universidad de prueba Postman"
+    },
+    {
+      "key": "universityEmailDomain",
+      "value": "pruebas.quesale.local"
+    },
+    {
+      "key": "universityId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Registrar universidad",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{universityName}}\",\n  \"emailDomain\": \"{{universityEmailDomain}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/universities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "universities"
+          ]
+        },
+        "description": "Prerequisito de perfiles. Usa un nombre y dominio que todavía no estén registrados; cambia las variables de la colección antes de repetir la solicitud. Esperado: 201 Created."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Universidad creada', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "if (pm.response.code === 201) {",
+              "    const university = pm.response.json();",
+              "    pm.expect(university.id).to.be.a('number');",
+              "    pm.expect(university.name).to.eql(pm.collectionVariables.get('universityName'));",
+              "    pm.expect(university.emailDomain).to.eql(pm.collectionVariables.get('universityEmailDomain'));",
+              "    pm.collectionVariables.set('universityId', university.id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
