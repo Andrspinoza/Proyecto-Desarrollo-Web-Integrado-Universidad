@@ -118,7 +118,53 @@
       ]
     },
     {
-      "name": "03 - Obtener universidad creada",
+      "name": "03 - Rechazar universidad duplicada → 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{universityName}}\",\n  \"emailDomain\": \"{{universityEmailDomain}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/universities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "universities"
+          ]
+        },
+        "description": "Ejecuta después de registrar correctamente la universidad. Reutiliza el mismo dominio para comprobar que el dominio de correo no puede duplicarse. Esperado: 409 Conflict."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('El dominio universitario duplicado se rechaza', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Obtener universidad creada",
       "request": {
         "method": "GET",
         "header": [],
@@ -153,6 +199,39 @@
               "        pm.expect(university.emailDomain).to.eql(pm.collectionVariables.get('universityEmailDomain'));",
               "    });",
               "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Universidad inexistente → 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/universities/-1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "universities",
+            "-1"
+          ]
+        },
+        "description": "Consulta un ID negativo que no puede corresponder a una universidad creada con identidad autogenerada. Esperado: 404 Not Found."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Universidad inexistente responde 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
             ]
           }
         }
