@@ -74,7 +74,7 @@ public class Report extends AbstractDomainAggregateRoot<Report> {
 
     private void resolve(Long adminAccountId, String resolution, ReportStatus resolvedStatus) {
         if (status != ReportStatus.OPEN) throw new IllegalStateException("Only open reports can be resolved");
-        if (adminAccountId == null) throw new IllegalArgumentException("Admin account ID is required");
+        validateRequiredPositiveId(adminAccountId, "Admin account ID");
         String validatedResolution = validateRequiredText(resolution, "Resolution");
 
         Instant now = Instant.now();

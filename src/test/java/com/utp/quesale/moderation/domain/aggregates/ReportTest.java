@@ -79,6 +79,8 @@ class ReportTest {
         Report report = new Report(1L, ReportTargetType.STUDENT, 2L, ReportReason.OTHER, null);
 
         assertThrows(IllegalArgumentException.class, () -> report.review(null, "Reviewed"));
+        assertThrows(IllegalArgumentException.class, () -> report.review(0L, "Reviewed"));
+        assertThrows(IllegalArgumentException.class, () -> report.dismiss(-9L, "Dismissed"));
         assertThrows(IllegalArgumentException.class, () -> report.review(9L, " "));
     }
 
