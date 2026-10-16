@@ -241,7 +241,7 @@
         "header": [
           {
             "key": "X-Student-Id",
-            "value": "{{studentId}}"
+            "value": "{{recipientId}}"
           }
         ],
         "url": {
@@ -257,7 +257,7 @@
             "accept"
           ]
         },
-        "description": "Run as the recipient of a pending connection. Expected: 200 OK."
+        "description": "Runs as recipientId, the recipient of a pending connection. Expected: 200 OK."
       },
       "event": [
         {
@@ -280,7 +280,7 @@
         "header": [
           {
             "key": "X-Student-Id",
-            "value": "{{studentId}}"
+            "value": "{{recipientId}}"
           }
         ],
         "url": {
@@ -296,7 +296,7 @@
             "reject"
           ]
         },
-        "description": "Run as the recipient of a pending connection. Use a pending connection not accepted in the previous request. Expected: 200 OK."
+        "description": "Before sending, set the collection variable connectionId to a different PENDING connection received by recipientId; do not reuse the connection accepted above. Expected: 200 OK."
       },
       "event": [
         {
@@ -335,7 +335,7 @@
             "cancel"
           ]
         },
-        "description": "Run as the requester of a pending connection. Use a pending connection not accepted or rejected in another request. Expected: 200 OK."
+        "description": "Before sending, set the collection variable connectionId to a separate PENDING connection requested by studentId; do not reuse a connection accepted or rejected above. Expected: 200 OK."
       },
       "event": [
         {
