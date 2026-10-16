@@ -677,10 +677,28 @@ Para cada contexto: agregados, reglas que **deben tener test** y endpoints (todo
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/messages` | Enviar mensaje |
-| GET | `/messages/conversations/{otherStudentId}` | Conversación con otro estudiante |
+| GET | `/messages/conversations/{otherStudentId}` | Conversación con otro estudiante (historial) |
 | PATCH | `/messages/{id}/read` | Marcar como leído |
 | GET | `/notifications` | Mis notificaciones |
 | PATCH | `/notifications/{id}/read` | Marcar como leída |
+
+**Tiempo real (D-17).** El chat entrega los mensajes al instante por WebSocket con STOMP; REST
+sigue siendo la vía para enviar, guardar y consultar el historial.
+
+- **Flujo:** `POST /messages` guarda el mensaje (regla del agregado `Message`), el handler
+  despacha `MessageSentEvent` y un manejador de ese evento lo **empuja** al destinatario con
+  `SimpMessagingTemplate`. El socket no contiene reglas de negocio.
+- **Conexión:** `/ws` (con `setAllowedOrigins` para el frontend). Cada estudiante se suscribe a
+  `/user/queue/messages`; las notificaciones llegan por `/user/queue/notifications`.
+- **Identidad provisional:** `studentId` como parámetro de la conexión, igual que el header
+  `X-Student-Id` de REST (D-16); con JWT sale del token.
+- **Dependencia:** `spring-boot-starter-websocket`; la agrega André en `pom.xml`, no cada
+  integrante.
+- **Orden de trabajo:** dominio, persistencia y REST de `messaging` primero (el evento
+  `MessageSentEvent` se declara desde el dominio); el push por WebSocket se monta sobre ese
+  evento y no cambia el dominio ni la persistencia.
+- **Pruebas:** el manejador del evento se prueba con JUnit y un `SimpMessagingTemplate` simulado.
+  Swagger no documenta WebSockets; el contrato queda en esta sección.
 
 ### 8.7 `moderation` — Ubes
 
