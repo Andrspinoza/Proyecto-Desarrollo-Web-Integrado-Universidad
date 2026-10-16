@@ -4,12 +4,12 @@ Solo Ubes edita este archivo, en el último commit de cada PR.
 
 | Bloque | Estado | PR | Notas |
 |---|---|---|---|
-| Dominio y tests | ⏳ | | |
-| Contrato de repositorio | ⏳ | | |
+| Dominio y tests | 🔨 | | Report, Block y sus pruebas incluidos en este bloque |
+| Contrato de repositorio | 🔨 | | Repositorios de dominio y fachada incluidos en este bloque |
 | Persistencia y test H2 | ⏳ | | Espera B2 |
 | Capa de aplicación | ⏳ | | |
-| Resources y endpoints | ⏳ | | |
+| Resources y endpoints | 🔨 | | Resources, assemblers y colección Postman incluidos; controllers y endpoints pendientes |
 
-**Siguiente paso:** dominio de Report y Block con tests
+**Siguiente paso:** abrir el PR de moderation hacia `main`; después, continuar con connections en su rama independiente.
 
-**Última actualización:** 2026-10-15 · André
+**Última actualización:** 2026-10-16 · Ubes
