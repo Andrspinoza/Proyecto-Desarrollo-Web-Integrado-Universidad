@@ -58,6 +58,11 @@ repositorio** desde la semana 11 (D-15).
 
 ## 2. Estado actual y quién sigue — se actualiza en cada merge
 
+> **El estado al día está en [`docs/seguimiento/README.md`](docs/seguimiento/README.md)**
+> (piezas B0 a B7 y qué hace cada integrante ahora). Si la tabla de abajo difiere, **manda ese
+> panel**. Antes de empezar cualquier tarea, el agente lo lee junto con
+> `docs/seguimiento/<modulo>.md`.
+
 **Esta es la tabla que manda.** Quien fusiona un PR que cambia una fila, la actualiza en ese
 mismo PR (o André al fusionar).
 

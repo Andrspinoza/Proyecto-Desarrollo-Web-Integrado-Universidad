@@ -326,18 +326,35 @@ Cada carpeta se crea **cuando se implementa** algo que va en ella; no se crean c
 - **Cada adapter tiene su prueba `@DataJpaTest` sobre H2** (D-14): guarda un objeto de dominio,
   lo vuelve a leer y verifica que no se perdió nada. Modelo: el test de `iam` del repo.
 
-### `application` — pendiente (D-03)
+### `application` — CQRS del profesor (clase del 15-oct)
 
-**Todavía no se escribe.** El profesor la enseña en la clase del 15-oct. Hasta entonces el
-controller coordina directamente con la interfaz del repositorio (sección 1.4). Lo que sigue es
-la idea general; se reemplaza por la versión del profesor cuando la muestre:
+> **No la escribas hasta que B5 esté en `main`** (ver `docs/seguimiento/README.md`). `iam` será
+> el modelo; así todos los módulos quedan iguales. Hasta entonces, el controller usa la interfaz
+> del repositorio (sección 1.4). Esta sección reemplaza la idea anterior de `XCommandService` y
+> `application/internal`, que ya **no se usa**.
 
-- `XCommandService` / `XQueryService` son interfaces en `domain/services`; sus implementaciones
-  `@Service` van en `application/internal`. Comandos con `@Transactional`, consultas con
-  `@Transactional(readOnly = true)`.
-- **Solo orquestan:** resolver identidad → validar con fachadas → cargar el agregado → invocar
-  su método → guardar → publicar eventos. Las reglas del negocio no se escriben aquí.
-- Inyección siempre por constructor. Sin Lombok.
+Estructura, tomada del código `learning-platform-semana9-corregido` del profesor:
+
+```text
+application/
+├── commands/        un record por operación que modifica (CreateStudentCommand)
+├── queries/         un record por consulta (GetStudentQuery)
+├── dtos/            el resultado que devuelve el handler (StudentDto)
+├── assemblers/      pasa del agregado al DTO, sin depender de HTTP
+└── handlers/
+    ├── commands/    una clase @Service por agregado, con un handle(...) por command
+    └── queries/     una clase @Service por query, con @Transactional(readOnly = true)
+```
+
+- El **handler de command** carga el agregado con el repositorio del dominio, ejecuta la regla,
+  guarda y despacha los eventos con `DomainEventDispatcher`. Lleva `@Transactional`.
+- Las **reglas del negocio** siguen en el agregado; el handler solo coordina.
+- Los eventos se publican **después del commit**; el despachador está en `shared`.
+- El **controller** arma el command desde el resource, llama al handler y arma el resource de
+  respuesta **a partir del DTO**. El `@Transactional` del controller desaparece.
+- Errores: se mantienen nuestras excepciones propias (`XNotFoundException` → 404), no
+  `IllegalArgumentException`.
+- Inyección por constructor. Sin Lombok (D-02).
 
 ### `interfaces`
 
