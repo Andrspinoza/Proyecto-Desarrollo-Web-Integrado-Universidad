@@ -12,6 +12,7 @@ Code, Gemini/Antigravity, GitHub Copilot u otro) que trabajen en este repositori
 |---|---|
 | `AGENTS.md` (este) | Producto, decisiones, **estado actual y quién sigue**, preguntas frecuentes, equipo, git, commits, orden de trabajo, calendario |
 | [`docs/guia-backend.md`](docs/guia-backend.md) | Guía técnica: molde del profesor, capas, contextos, endpoints, pruebas, base de datos, guion de exposición |
+| `docs/seguimiento/<modulo>.md` | Avance de cada módulo: bloques hechos, PR y siguiente paso |
 
 **Cada regla vive en un solo archivo.** No se copian reglas de uno a otro. La guía técnica está
 en `docs/` porque Codex solo carga los primeros 32 KB de los `AGENTS.md`.
@@ -56,6 +57,11 @@ repositorio** desde la semana 11 (D-15).
 ---
 
 ## 2. Estado actual y quién sigue — se actualiza en cada merge
+
+> **El estado al día está en [`docs/seguimiento/README.md`](docs/seguimiento/README.md)**
+> (piezas B0 a B7 y qué hace cada integrante ahora). Si la tabla de abajo difiere, **manda ese
+> panel**. Antes de empezar cualquier tarea, el agente lo lee junto con
+> `docs/seguimiento/<modulo>.md`.
 
 **Esta es la tabla que manda.** Quien fusiona un PR que cambia una fila, la actualiza en ese
 mismo PR (o André al fusionar).
@@ -125,6 +131,12 @@ estudiante (D-16). JWT llegará cuando el profesor lo enseñe.
 **¿Necesito MySQL para los tests?** No: los tests usan H2 en memoria (D-14). MySQL solo para
 correr la API y ver Swagger.
 
+**¿Dónde corto y abro el PR?** Al final de cada bloque (sección 6, «Dónde termina un PR»).
+El agente te muestra el plan completo y te dice hasta dónde puedes avanzar.
+
+**¿Cómo sé qué hicieron los demás, sin `gh`?** Lee `docs/seguimiento/<modulo>.md` en `main` y
+`git log origin/main`. `gh` es opcional.
+
 **¿Qué se presenta el 15-oct y qué el 22-oct?** Sección 8.
 
 **Encontré algo que contradice este archivo.** Detente, avísale a André y anótalo; no elijas.
@@ -153,6 +165,7 @@ Estados: ✅ decidida · 🟡 propuesta, se puede cambiar · ❓ pendiente · �
 | D-14 | ✅ | Cada adapter tiene un test `@DataJpaTest` sobre **H2** en memoria; los tests de dominio son JUnit puro | Indicación del profesor: probar la persistencia sin MySQL |
 | D-15 | ✅ | **Repos separados**: este repo es solo la API, con el proyecto Maven **en la raíz**; el frontend va en otro repo | Indicación del profesor |
 | D-16 | 🟡 | Identidad provisional por header **`X-Student-Id`** hasta ver Spring Security + JWT | Permite probar endpoints sin login ni `Account` |
+| D-17 | ✅ | **Chat en tiempo real por WebSocket (STOMP)**: REST envía y guarda, el WebSocket entrega al instante. Detalle en la guía, 8.6 | Un chat no puede entregar con retraso; es requisito del producto |
 
 **Cómo cambia una decisión:** no se borra. Su fila pasa a ⛔ «reemplazada por D-NN», se
 agrega la fila nueva y se anota en el Registro de cambios (sección 15). Si una decisión no está
@@ -277,6 +290,41 @@ Escríbeme «listo» para seguir con el paso N+1: <qué viene>.
 - Si la persona pide cambios, se corrigen **dentro del mismo paso**, antes del commit.
 - El agente **explica lo que hizo** para que la persona pueda defenderlo en la exposición.
 
+### Dónde termina un PR y cómo se sigue
+
+Un PR es un **bloque**, no el trabajo completo de un módulo. Los bloques son: (1) dominio con
+tests, (2) persistencia con test H2, (3) capa de aplicación, (4) resources y endpoints. Un
+bloque grande se parte en dos PR; un PR no pasa de unos 15 commits.
+
+1. **Al empezar**, el agente le muestra a la persona el plan completo en bloques: cuántos
+   commits tiene cada uno, dónde cae cada PR y qué bloques **no puede hacer todavía** porque
+   dependen de una pieza sin entregar (B2, una fachada…). Esos bloques quedan fuera y el
+   agente lo dice con claridad: «hasta aquí puedes avanzar».
+2. **Al terminar un bloque**, el agente se detiene con este aviso y no sigue:
+
+   ```text
+   ⏸ PUNTO DE PR — bloque N de M (<módulo>)
+   Commits de este PR: <lista>
+   Antes del último commit: actualiza docs/seguimiento/<modulo>.md
+   Ejecuta: git push
+   Abre el PR de <tu rama> hacia main con la plantilla y avisa a André.
+   Siguiente bloque: <cuál> — empieza cuando este PR esté fusionado y hayas traído main.
+   ```
+
+3. **Mientras el PR está abierto**, la persona puede seguir con el siguiente bloque en commits
+   locales, pero **no hace `push`** hasta que el PR se fusione y haya traído `main`. Si sube
+   antes, esos commits entran al PR que ya está abierto.
+4. Si el PR necesita correcciones, se agregan commits a la misma rama y el PR se actualiza solo.
+   Nunca `--amend` ni `push --force`.
+
+### Seguimiento de avance
+
+La constancia del avance no puede depender de `gh` ni de los PR de GitHub. Cada módulo tiene su
+archivo `docs/seguimiento/<modulo>.md`, con una fila por bloque, su estado, el número de PR y el
+siguiente paso. **Solo el dueño del módulo edita su archivo**, y lo hace en el último commit de
+cada PR, así que llega a `main` junto con el trabajo. Cualquier agente, aunque no tenga `gh`,
+sabe qué hay hecho leyendo esos archivos y el `git log origin/main`.
+
 ---
 
 ## 7. Orden de trabajo y dependencias
@@ -395,6 +443,9 @@ Registro textual o resumido de lo que pide el docente. Es la primera fuente de v
 | 8-oct | EER Diagram por ingeniería inversa en MySQL Workbench |
 | 11-oct | La demo va bien; falta la **capa de aplicación**, que enseña en la próxima clase (D-03) |
 | 11-oct | La entrega se **extiende a la semana 11** (22-oct); el 15-oct se presenta un avance |
+| 15-oct | Capa de aplicación con **CQRS**: commands y queries, un handler por cada uno, DTOs y assembler en `application`; el handler guarda y despacha los eventos (código `learning-platform-semana9-corregido`) |
+| 15-oct | Separar el sistema en **varios contextos delimitados está bien: así se trabaja en DDD**. Su ejemplo usa uno solo (`learning`) porque es pequeño |
+| 15-oct | **Swagger es requisito**. Se evalúa el código completo y lo que hizo cada integrante; se exponen algunos endpoints simples, sin sobreingeniería |
 
 ---
 
@@ -415,3 +466,6 @@ Se llena después de cada revisión. Cada observación genera una tarea o un cam
 | 2026-10-08 | André · Claude Code | Versión inicial de las reglas generales | Inicio del desarrollo del backend para el APF2 |
 | 2026-10-11 | André · Claude Code | Repo solo de API con Maven en la raíz (D-15 reemplaza D-11); `X-Student-Id` (D-16 reemplaza D-04); tests H2 (D-14); D-03 pendiente; D-05 decidida; secciones «Estado actual y quién sigue» y «Preguntas frecuentes»; calendario a la semana 11; guía técnica movida a `docs/guia-backend.md` | Indicaciones del profesor del 8 y 11-oct; límite de 32 KB de Codex |
 | 2026-10-11 | André · Claude Code | B0 y B1 marcadas como entregadas en la tabla de estado; Fernando puede empezar B2 | PR #2 fusionado; B1 en el PR siguiente |
+| 2026-10-15 | André · Claude Code | Indicaciones del profesor del 15-oct en la sección 13: CQRS, varios contextos delimitados, Swagger y criterio de evaluación | Clase y conversación con el profesor del 15-oct |
+| 2026-10-15 | André · Claude Code | D-17: chat en tiempo real por WebSocket (STOMP) y su contrato en la guía, 8.6 | El diseño de `messaging` solo contemplaba REST; un chat debe entregar al instante |
+| 2026-10-15 | André · Claude Code | Reglas para partir el trabajo en PR («Punto de PR») y archivos `docs/seguimiento/<modulo>.md` | Los agentes no sabían dónde cortar un PR y el avance solo constaba en commits y PR, ilegibles sin `gh` |
