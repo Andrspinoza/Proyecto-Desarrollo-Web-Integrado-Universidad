@@ -1,0 +1,558 @@
+{
+  "info": {
+    "_postman_id": "fffe38e8-c8c8-4bee-84c6-cbc1ee3fbfd4",
+    "name": "Que Sale - Moderation",
+    "description": "Pruebas para reportes y bloqueos. Configura studentId, blockedStudentId y reportId con estudiantes y recursos existentes. Las operaciones administrativas usan adminStudentId como marcador: confirma el contrato de identidad del controller antes de ejecutarlas, ya que el dominio recibe adminAccountId pero el header provisional documentado es X-Student-Id.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "studentId",
+      "value": "1"
+    },
+    {
+      "key": "blockedStudentId",
+      "value": "2"
+    },
+    {
+      "key": "reportTargetId",
+      "value": "2"
+    },
+    {
+      "key": "reportId",
+      "value": "1"
+    },
+    {
+      "key": "reviewReportId",
+      "value": "1"
+    },
+    {
+      "key": "dismissReportId",
+      "value": "2"
+    },
+    {
+      "key": "adminStudentId",
+      "value": "3"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create report",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"targetType\": \"STUDENT\",\n  \"targetId\": {{reportTargetId}},\n  \"reason\": \"HARASSMENT\",\n  \"detail\": \"Repeated unwanted messages\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/reports",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reports"
+          ]
+        },
+        "description": "Expected: 201 Created. A report starts with OPEN status."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Report is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "if (pm.response.code === 201) {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.status).to.eql('OPEN');",
+              "    if (body.id !== undefined) pm.collectionVariables.set('reportId', body.id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject report without required fields",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"detail\": \"Missing target and reason\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/reports",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reports"
+          ]
+        },
+        "description": "Expected: 400 Bad Request due to required targetType, targetId, and reason."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Invalid report is rejected', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List reports for administrator",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminStudentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/reports",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reports"
+          ]
+        },
+        "description": "Administrative endpoint. Confirm how the controller resolves the admin account from X-Student-Id before use. Expected: 200 OK."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Reports are listed', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List open reports for administrator",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminStudentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/reports?status=OPEN",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reports"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "OPEN"
+            }
+          ]
+        },
+        "description": "Administrative endpoint. Expected: 200 OK with only OPEN reports."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Open reports are listed', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "    pm.response.json().forEach(function (report) {",
+              "        pm.expect(report.status).to.eql('OPEN');",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get report by id for administrator",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminStudentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/reports/{{reportId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reports",
+            "{{reportId}}"
+          ]
+        },
+        "description": "Administrative endpoint. Expected: 200 OK for an existing report; 404 for a missing report."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Report is found', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('reportId')));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Review report",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminStudentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resolution\": \"Verified and actioned\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/reports/{{reviewReportId}}/review",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reports",
+            "{{reviewReportId}}",
+            "review"
+          ]
+        },
+        "description": "Administrative endpoint. Use a different OPEN report from the dismiss request. Expected: 200 OK and REVIEWED status. Confirm admin identity resolution before use."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Report is reviewed', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().status).to.eql('REVIEWED');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dismiss report",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminStudentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resolution\": \"No policy violation found\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/reports/{{dismissReportId}}/dismiss",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "reports",
+            "{{dismissReportId}}",
+            "dismiss"
+          ]
+        },
+        "description": "Administrative endpoint. Use a different OPEN report from the review request. Expected: 200 OK and DISMISSED status. Confirm admin identity resolution before use."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Report is dismissed', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().status).to.eql('DISMISSED');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create block",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"blockedStudentId\": {{blockedStudentId}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/blocks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "blocks"
+          ]
+        },
+        "description": "Expected: 201 Created. The blocker is taken from X-Student-Id."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Block is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    pm.expect(pm.response.json().blockerId).to.eql(Number(pm.collectionVariables.get('studentId')));",
+              "});",
+              "if (pm.response.code === 201) {",
+              "    pm.collectionVariables.set('blockedStudentId', pm.response.json().blockedId);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject blocking yourself",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"blockedStudentId\": {{studentId}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/blocks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "blocks"
+          ]
+        },
+        "description": "Expected: 400 Bad Request because a student cannot block themself."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Self-block is rejected', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List my blocks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/blocks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "blocks"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('My blocks are listed', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unblock student",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/blocks/{{blockedStudentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "blocks",
+            "{{blockedStudentId}}"
+          ]
+        },
+        "description": "Expected: 204 No Content. The student removed from the block list is addressed by blockedStudentId."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Block is removed', function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
