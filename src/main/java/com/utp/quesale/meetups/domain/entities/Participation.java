@@ -1,0 +1,53 @@
+package com.utp.quesale.meetups.domain.entities;
+
+import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
+
+import java.time.Instant;
+
+public class Participation {
+
+    private final Long studentId;
+    private ParticipationStatus status;
+    private final Instant registeredAt;
+
+    public Participation(Long studentId) {
+        this(studentId, ParticipationStatus.REQUESTED, Instant.now());
+    }
+
+    public Participation(Long studentId, ParticipationStatus status, Instant registeredAt) {
+        if (studentId == null || studentId <= 0)
+            throw new IllegalArgumentException("Student ID must be positive");
+        if (status == null)
+            throw new IllegalArgumentException("Participation status is required");
+        if (registeredAt == null)
+            throw new IllegalArgumentException("Registration date is required");
+
+        this.studentId = studentId;
+        this.status = status;
+        this.registeredAt = registeredAt;
+    }
+
+    public void confirm() {
+        if (status != ParticipationStatus.REQUESTED)
+            throw new IllegalStateException("Only requested participation can be confirmed");
+        status = ParticipationStatus.CONFIRMED;
+    }
+
+    public void withdraw() {
+        if (status == ParticipationStatus.WITHDRAWN)
+            throw new IllegalStateException("Participation is already withdrawn");
+        status = ParticipationStatus.WITHDRAWN;
+    }
+
+    public Long getStudentId() {
+        return studentId;
+    }
+
+    public ParticipationStatus getStatus() {
+        return status;
+    }
+
+    public Instant getRegisteredAt() {
+        return registeredAt;
+    }
+}
