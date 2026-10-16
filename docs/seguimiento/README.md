@@ -27,8 +27,34 @@ listar → una o dos acciones clave. Endpoints simples, sin sobreingeniería. Sw
 | **Fernando** | `profiles` | `Student`, `FullName`, `StudentRecordId`, `StudyCycle`, `StudentJpaEntity` | `StudentRepository`, mapper, adapter y test H2; `Profile` (carrera, ciclo, descripción, visibilidad), `Interest` y `Skill` con su persistencia; endpoints de estudiante; **EER Diagram y diccionario de datos** |
 | **Ubes** | `connections`, `moderation` | Dominio, repositorios, resources y colección Postman de `moderation` | `connections`: dominio, repositorio, resources y Postman en su PR; persistencia con test H2 de ambos; endpoints de crear, listar y aceptar conexión, y de reportar y bloquear; `00-setup` de Postman |
 | **Mafer** | `communities`, `messaging` | Dominio completo de `communities` (con `promote`), contratos y resources | Persistencia con test H2 (comunidades, miembros, publicaciones); endpoints de crear, listar, unirse y publicar; **B6** (`Message` mínimo y `MessageSentEvent`) |
-| **Jesús** | `meetups` | Nada todavía | Todo: dominio con tests (cupo, organizador, cancelación; eventos con `meetupId`), persistencia con bloqueo pesimista y test H2, endpoints de crear, listar, solicitar y confirmar participación, y cancelar |
+| **Jesús** | `meetups` | Nada todavía en `main` (dominio avanzado en su rama, sin subir) | Dominio con tests (cupo, organizador, cancelación, **visibilidad `PUBLIC` y `PRIVATE` e invitaciones**, eventos y excepciones según la guía 8.4); persistencia con bloqueo pesimista y test H2; endpoints de crear, listar, solicitar, invitar, confirmar y cancelar. Antes de abrir su PR: `git pull origin main` |
 | **Todos** | Capa de aplicación | — | Cuando B5 esté en `main`: commands, queries, handlers, DTOs y assembler de su módulo, copiando `iam`; el controller pasa a usar los handlers |
+
+## En qué orden se hace
+
+Dentro de cada ola, todos trabajan **en paralelo**; no se pasa a la siguiente ola sin lo que pide.
+
+| Ola | Cuándo | Qué se hace | Quién | Necesita |
+|---|---|---|---|---|
+| **1** | Vie 16 – Sáb 17 | Cerrar PR de dominio de `meetups` (eventos y excepciones, guía 8.4) | Jesús | Nada |
+| | | `StudentRepository`, mapper, adapter y test H2 | Fernando | B2 ✅ |
+| | | PR de dominio de `connections`; persistencia de `moderation` | Ubes | B2 ✅ |
+| | | Persistencia de `communities` | Mafer | B2 ✅ |
+| | | **B5**: clase base pura, despachador y capa de aplicación de `iam` | André | Nada |
+| **2** | Dom 18 – Lun 19 | Persistencia con bloqueo pesimista de `meetups` | Jesús | Dominio de `meetups` fusionado |
+| | | `Profile`, `Interest`, `Skill` y su persistencia | Fernando | Adapter de `Student` |
+| | | Persistencia de `connections` | Ubes | Dominio de `connections` fusionado |
+| | | **B6**: `Message` mínimo con `MessageSentEvent` | Mafer | Persistencia de `communities` |
+| | | **Capa de aplicación** de cada módulo, copiando `iam` | Cada dueño | **B5 en `main`** |
+| **3** | Mar 20 | Controllers de cada módulo, con crear, obtener, listar y una o dos acciones clave | Cada dueño | Su persistencia y su capa de aplicación |
+| | | **B7**: WebSocket y `/chat-test.html` | André | B6 |
+| **4** | Mié 21 | Colecciones Postman y `00-setup`; pruebas en Swagger | Ubes y cada dueño | Los controllers |
+| | | **EER Diagram y diccionario de datos** | Fernando | Todas las tablas creadas |
+| | | `Account` y ensayo de la demo; tag `v0.2.0` | André | Todo lo anterior |
+| **Entrega** | Jue 22 | APF2 | Todos | — |
+
+Si una ola se atrasa, **se recorta el final de la lista (controllers de acciones secundarias,
+`Account`), nunca la persistencia**: sin tablas no hay EER ni demo.
 
 ## Después de la entrega
 
