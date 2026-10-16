@@ -76,6 +76,87 @@
           }
         }
       ]
+    },
+    {
+      "name": "02 - Listar universidades",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/universities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "universities"
+          ]
+        },
+        "description": "Comprueba que la universidad creada aparece en el catálogo. Esperado: 200 OK."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Universidades listadas', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});",
+              "if (pm.response.code === 200) {",
+              "    const universities = pm.response.json();",
+              "    const universityId = Number(pm.collectionVariables.get('universityId'));",
+              "    pm.test('La universidad creada está en el catálogo', function () {",
+              "        pm.expect(universities.some(function (university) { return university.id === universityId; })).to.eql(true);",
+              "    });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Obtener universidad creada",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/universities/{{universityId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "universities",
+            "{{universityId}}"
+          ]
+        },
+        "description": "Usa universityId, guardado por la solicitud de registro. Esperado: 200 OK con los datos de la universidad."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Universidad encontrada', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "if (pm.response.code === 200) {",
+              "    const university = pm.response.json();",
+              "    pm.test('Los datos coinciden con la universidad registrada', function () {",
+              "        pm.expect(university.id).to.eql(Number(pm.collectionVariables.get('universityId')));",
+              "        pm.expect(university.name).to.eql(pm.collectionVariables.get('universityName'));",
+              "        pm.expect(university.emailDomain).to.eql(pm.collectionVariables.get('universityEmailDomain'));",
+              "    });",
+              "}"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
