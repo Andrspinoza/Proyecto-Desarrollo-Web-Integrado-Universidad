@@ -63,6 +63,16 @@ public class Community extends AbstractDomainAggregateRoot<Community> {
         memberships.remove(membership);
     }
 
+    // Solo un ADMIN nombra a otro; así el único ADMIN puede salir después de dejar un reemplazo
+    public void promote(Long studentId, Long requesterId) {
+        if (!isAdmin(requesterId)) throw new NotCommunityAdminException(requesterId);
+        Membership current = findMembership(studentId)
+                .orElseThrow(() -> new NotMemberException(studentId));
+        if (current.isAdmin()) throw new IllegalStateException("Member is already an admin");
+        memberships.set(memberships.indexOf(current),
+                new Membership(current.getId(), studentId, MemberRole.ADMIN, current.getJoinedAt()));
+    }
+
     public void update(String name, String description, Long requesterId) {
         if (!isAdmin(requesterId)) throw new NotCommunityAdminException(requesterId);
         this.name = validName(name);

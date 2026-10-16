@@ -87,6 +87,42 @@ class CommunityTest {
     }
 
     @Test
+    @DisplayName("Un ADMIN promueve a un miembro y el primer ADMIN ya puede salir")
+    void adminCanPromoteMember() {
+        Community community = community();
+        community.join(STUDENT_ID);
+
+        community.promote(STUDENT_ID, CREATOR_ID);
+
+        assertTrue(community.isAdmin(STUDENT_ID));
+        assertDoesNotThrow(() -> community.leave(CREATOR_ID));
+        assertFalse(community.isMember(CREATOR_ID));
+    }
+
+    @Test
+    @DisplayName("Un MEMBER no puede promover a nadie")
+    void memberCannotPromote() {
+        Community community = community();
+        community.join(STUDENT_ID);
+        community.join(30L);
+
+        assertThrows(NotCommunityAdminException.class, () -> community.promote(30L, STUDENT_ID));
+        assertFalse(community.isAdmin(30L));
+    }
+
+    @Test
+    @DisplayName("Solo se promueve a quien ya es miembro")
+    void cannotPromoteNonMember() {
+        assertThrows(NotMemberException.class, () -> community().promote(STUDENT_ID, CREATOR_ID));
+    }
+
+    @Test
+    @DisplayName("No se promueve a quien ya es ADMIN")
+    void cannotPromoteAdminTwice() {
+        assertThrows(IllegalStateException.class, () -> community().promote(CREATOR_ID, CREATOR_ID));
+    }
+
+    @Test
     @DisplayName("Un ADMIN modifica la comunidad")
     void adminCanUpdate() {
         Community community = community();
