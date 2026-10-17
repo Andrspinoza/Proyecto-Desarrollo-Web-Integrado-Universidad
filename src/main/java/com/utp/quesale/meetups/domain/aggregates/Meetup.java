@@ -1,11 +1,19 @@
 package com.utp.quesale.meetups.domain.aggregates;
 
 import com.utp.quesale.meetups.domain.entities.Participation;
+import com.utp.quesale.meetups.domain.events.InvitationAcceptedEvent;
+import com.utp.quesale.meetups.domain.events.InvitationDeclinedEvent;
+import com.utp.quesale.meetups.domain.events.MeetupCancelledEvent;
+import com.utp.quesale.meetups.domain.events.MeetupCreatedEvent;
+import com.utp.quesale.meetups.domain.events.ParticipationConfirmedEvent;
+import com.utp.quesale.meetups.domain.events.ParticipationInvitedEvent;
+import com.utp.quesale.meetups.domain.events.ParticipationRequestedEvent;
 import com.utp.quesale.meetups.domain.enums.MeetupStatus;
 import com.utp.quesale.meetups.domain.enums.MeetupType;
 import com.utp.quesale.meetups.domain.enums.MeetupVisibility;
 import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
 import com.utp.quesale.meetups.domain.exceptions.MeetupAccessDeniedException;
+import com.utp.quesale.meetups.domain.exceptions.ParticipationNotFoundException;
 import com.utp.quesale.meetups.domain.valueobjects.Capacity;
 import com.utp.quesale.meetups.domain.valueobjects.Place;
 import com.utp.quesale.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
@@ -52,6 +60,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
 
         if (!scheduledAt.isAfter(LocalDateTime.now()))
             throw new IllegalArgumentException("Meetup date must be in the future");
+        registerDomainEvent(new MeetupCreatedEvent(id, organizerId, Instant.now()));
     }
 
     // Rehidrata el agregado desde persistencia sin exigir que la fecha siga en el futuro.
@@ -129,6 +138,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
         ensureJoinable(LocalDateTime.now());
         ensureNotParticipating(studentId);
         participations.add(new Participation(studentId));
+        registerDomainEvent(new ParticipationRequestedEvent(id, organizerId, studentId, Instant.now()));
     }
 
     public void confirmParticipation(Long studentId, Long requesterId) {
@@ -137,8 +147,9 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
 
         Participation participation = findParticipation(studentId);
         if (participation == null)
-            throw new IllegalArgumentException("Participation was not found for student %s".formatted(studentId));
+            throw new ParticipationNotFoundException(id, studentId);
         participation.confirm();
+        registerDomainEvent(new ParticipationConfirmedEvent(id, organizerId, studentId, Instant.now()));
     }
 
     public void invite(Long studentId, Long requesterId) {
@@ -147,6 +158,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
         ensureUpcoming();
         ensureNotParticipating(studentId);
         participations.add(new Participation(studentId, ParticipationStatus.INVITED, Instant.now()));
+        registerDomainEvent(new ParticipationInvitedEvent(id, organizerId, studentId, Instant.now()));
     }
 
     public void acceptInvitation(Long studentId) {
@@ -155,8 +167,9 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
 
         Participation participation = findParticipation(studentId);
         if (participation == null)
-            throw new IllegalArgumentException("Participation was not found for student %s".formatted(studentId));
+            throw new ParticipationNotFoundException(id, studentId);
         participation.acceptInvitation();
+        registerDomainEvent(new InvitationAcceptedEvent(id, organizerId, studentId, Instant.now()));
     }
 
     public void declineInvitation(Long studentId) {
@@ -164,8 +177,9 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
 
         Participation participation = findParticipation(studentId);
         if (participation == null)
-            throw new IllegalArgumentException("Participation was not found for student %s".formatted(studentId));
+            throw new ParticipationNotFoundException(id, studentId);
         participation.declineInvitation();
+        registerDomainEvent(new InvitationDeclinedEvent(id, organizerId, studentId, Instant.now()));
     }
 
     public void withdraw(Long studentId) {
@@ -175,7 +189,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
 
         Participation participation = findParticipation(studentId);
         if (participation == null)
-            throw new IllegalArgumentException("Participation was not found for student %s".formatted(studentId));
+            throw new ParticipationNotFoundException(id, studentId);
         participation.withdraw();
     }
 
@@ -217,7 +231,15 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
     public void cancel(Long requesterId) {
         ensureOrganizer(requesterId);
         ensureScheduled();
+        List<Long> participantIds = participations.stream()
+                .filter(participation -> !participation.getStudentId().equals(organizerId))
+                .filter(participation -> participation.getStatus() == ParticipationStatus.REQUESTED
+                        || participation.getStatus() == ParticipationStatus.INVITED
+                        || participation.getStatus() == ParticipationStatus.CONFIRMED)
+                .map(Participation::getStudentId)
+                .toList();
         status = MeetupStatus.CANCELLED;
+        registerDomainEvent(new MeetupCancelledEvent(id, organizerId, List.copyOf(participantIds), Instant.now()));
     }
 
     public void finish(Long requesterId, LocalDateTime now) {

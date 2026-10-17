@@ -1,11 +1,19 @@
 package com.utp.quesale.meetups.domain.aggregates;
 
 import com.utp.quesale.meetups.domain.entities.Participation;
+import com.utp.quesale.meetups.domain.events.InvitationAcceptedEvent;
+import com.utp.quesale.meetups.domain.events.InvitationDeclinedEvent;
+import com.utp.quesale.meetups.domain.events.MeetupCancelledEvent;
+import com.utp.quesale.meetups.domain.events.MeetupCreatedEvent;
+import com.utp.quesale.meetups.domain.events.ParticipationConfirmedEvent;
+import com.utp.quesale.meetups.domain.events.ParticipationInvitedEvent;
+import com.utp.quesale.meetups.domain.events.ParticipationRequestedEvent;
 import com.utp.quesale.meetups.domain.enums.MeetupStatus;
 import com.utp.quesale.meetups.domain.enums.MeetupType;
 import com.utp.quesale.meetups.domain.enums.MeetupVisibility;
 import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
 import com.utp.quesale.meetups.domain.exceptions.MeetupAccessDeniedException;
+import com.utp.quesale.meetups.domain.exceptions.ParticipationNotFoundException;
 import com.utp.quesale.meetups.domain.valueobjects.Capacity;
 import com.utp.quesale.meetups.domain.valueobjects.Place;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +25,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -288,6 +298,101 @@ class MeetupTest {
         assertFalse(meetup.isJoinable(LocalDateTime.now()));
     }
 
+    @Test
+    @DisplayName("Al crear se registra el evento MeetupCreatedEvent y luego se limpia")
+    void registersAndPullsMeetupCreatedEvent() {
+        Meetup meetup = createMeetup(3);
+
+        List<Object> events = meetup.pullDomainEvents();
+
+        assertEquals(1, events.size());
+        MeetupCreatedEvent event = assertInstanceOf(MeetupCreatedEvent.class, events.getFirst());
+        assertNull(event.meetupId());
+        assertEquals(ORGANIZER_ID, event.organizerId());
+        assertTrue(event.occurredAt() != null);
+        assertTrue(meetup.pullDomainEvents().isEmpty());
+    }
+
+    @Test
+    @DisplayName("La rehidratación no genera eventos de creación")
+    void rehydrationDoesNotRegisterCreatedEvent() {
+        Meetup meetup = rehydrateMeetup(futureDate(), MeetupStatus.SCHEDULED, List.of(organizerParticipation()));
+
+        assertTrue(meetup.pullDomainEvents().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Las acciones registran sus eventos de dominio correspondientes")
+    void registersParticipationAndInvitationEvents() {
+        Meetup meetup = createMeetup(5);
+        meetup.pullDomainEvents();
+
+        meetup.requestParticipation(2L);
+        ParticipationRequestedEvent requested = assertInstanceOf(
+                ParticipationRequestedEvent.class, meetup.pullDomainEvents().getFirst());
+        assertEventIdentity(requested.meetupId(), requested.organizerId(), requested.studentId(), 2L);
+
+        meetup.confirmParticipation(2L, ORGANIZER_ID);
+        ParticipationConfirmedEvent confirmed = assertInstanceOf(
+                ParticipationConfirmedEvent.class, meetup.pullDomainEvents().getFirst());
+        assertEventIdentity(confirmed.meetupId(), confirmed.organizerId(), confirmed.studentId(), 2L);
+
+        meetup.invite(3L, ORGANIZER_ID);
+        ParticipationInvitedEvent invited = assertInstanceOf(
+                ParticipationInvitedEvent.class, meetup.pullDomainEvents().getFirst());
+        assertEventIdentity(invited.meetupId(), invited.organizerId(), invited.studentId(), 3L);
+
+        meetup.acceptInvitation(3L);
+        InvitationAcceptedEvent accepted = assertInstanceOf(
+                InvitationAcceptedEvent.class, meetup.pullDomainEvents().getFirst());
+        assertEventIdentity(accepted.meetupId(), accepted.organizerId(), accepted.studentId(), 3L);
+
+        meetup.invite(4L, ORGANIZER_ID);
+        meetup.pullDomainEvents();
+        meetup.declineInvitation(4L);
+        InvitationDeclinedEvent declined = assertInstanceOf(
+                InvitationDeclinedEvent.class, meetup.pullDomainEvents().getFirst());
+        assertEventIdentity(declined.meetupId(), declined.organizerId(), declined.studentId(), 4L);
+    }
+
+    @Test
+    @DisplayName("Al cancelar, el evento contiene solo participantes activos y su lista es inmutable")
+    void cancellationEventContainsActiveParticipants() {
+        Meetup meetup = createMeetup(5);
+        meetup.pullDomainEvents();
+        meetup.requestParticipation(2L);
+        meetup.confirmParticipation(2L, ORGANIZER_ID);
+        meetup.requestParticipation(3L);
+        meetup.invite(4L, ORGANIZER_ID);
+        meetup.declineInvitation(4L);
+        meetup.requestParticipation(5L);
+        meetup.withdraw(5L);
+        meetup.pullDomainEvents();
+
+        meetup.cancel(ORGANIZER_ID);
+
+        MeetupCancelledEvent event = assertInstanceOf(MeetupCancelledEvent.class, meetup.pullDomainEvents().getFirst());
+        assertEquals(ORGANIZER_ID, event.organizerId());
+        assertEquals(List.of(2L, 3L), event.participantIds());
+        assertThrows(UnsupportedOperationException.class, () -> event.participantIds().add(99L));
+    }
+
+    @Test
+    @DisplayName("Las transiciones fallan con ParticipationNotFoundException si no existe participación")
+    void missingParticipationUsesNotFoundException() {
+        Meetup meetup = createMeetup(3);
+
+        assertThrows(ParticipationNotFoundException.class, () -> meetup.confirmParticipation(2L, ORGANIZER_ID));
+        assertThrows(ParticipationNotFoundException.class, () -> meetup.acceptInvitation(2L));
+        assertThrows(ParticipationNotFoundException.class, () -> meetup.declineInvitation(2L));
+        assertThrows(ParticipationNotFoundException.class, () -> meetup.withdraw(2L));
+    }
+
+    private static void assertEventIdentity(Long meetupId, Long organizerId, Long studentId, Long expectedStudentId) {
+        assertNull(meetupId);
+        assertEquals(ORGANIZER_ID, organizerId);
+        assertEquals(expectedStudentId, studentId);
+    }
     private Meetup createMeetup(int capacity) {
         return createMeetup(capacity, MeetupVisibility.PUBLIC);
     }
