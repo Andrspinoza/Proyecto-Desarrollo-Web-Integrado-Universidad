@@ -33,9 +33,21 @@ public class Participation {
         status = ParticipationStatus.CONFIRMED;
     }
 
+    public void acceptInvitation() {
+        if (status != ParticipationStatus.INVITED)
+            throw new IllegalStateException("Only an invited student can accept the invitation");
+        status = ParticipationStatus.CONFIRMED;
+    }
+
+    public void declineInvitation() {
+        if (status != ParticipationStatus.INVITED)
+            throw new IllegalStateException("Only an invited student can decline the invitation");
+        status = ParticipationStatus.DECLINED;
+    }
+
     public void withdraw() {
-        if (status == ParticipationStatus.WITHDRAWN)
-            throw new IllegalStateException("Participation is already withdrawn");
+        if (status != ParticipationStatus.REQUESTED && status != ParticipationStatus.CONFIRMED)
+            throw new IllegalStateException("Only requested or confirmed participation can be withdrawn");
         status = ParticipationStatus.WITHDRAWN;
     }
 

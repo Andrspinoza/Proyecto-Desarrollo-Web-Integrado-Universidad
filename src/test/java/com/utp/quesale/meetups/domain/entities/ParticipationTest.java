@@ -34,6 +34,37 @@ class ParticipationTest {
     }
 
     @Test
+    @DisplayName("Una invitación puede aceptarse y ocupar un cupo")
+    void acceptsInvitation() {
+        Participation participation = invitedParticipation();
+
+        participation.acceptInvitation();
+
+        assertEquals(ParticipationStatus.CONFIRMED, participation.getStatus());
+        assertThrows(IllegalStateException.class, participation::acceptInvitation);
+    }
+
+    @Test
+    @DisplayName("Una invitación puede rechazarse")
+    void declinesInvitation() {
+        Participation participation = invitedParticipation();
+
+        participation.declineInvitation();
+
+        assertEquals(ParticipationStatus.DECLINED, participation.getStatus());
+        assertThrows(IllegalStateException.class, participation::declineInvitation);
+    }
+
+    @Test
+    @DisplayName("Solo una invitación puede aceptarse o rechazarse")
+    void onlyInvitedParticipationCanAcceptOrDecline() {
+        Participation requested = new Participation(42L);
+
+        assertThrows(IllegalStateException.class, requested::acceptInvitation);
+        assertThrows(IllegalStateException.class, requested::declineInvitation);
+    }
+
+    @Test
     @DisplayName("Una solicitud o confirmación puede retirarse")
     void withdrawsRequestedOrConfirmedParticipation() {
         Participation requested = new Participation(42L);
@@ -44,6 +75,17 @@ class ParticipationTest {
 
         assertEquals(ParticipationStatus.WITHDRAWN, requested.getStatus());
         assertEquals(ParticipationStatus.WITHDRAWN, confirmed.getStatus());
+    }
+
+    @Test
+    @DisplayName("Una invitación rechazada o retirada no puede retirarse otra vez")
+    void cannotWithdrawInactiveParticipation() {
+        Participation invited = invitedParticipation();
+        Participation declined = invitedParticipation();
+        declined.declineInvitation();
+
+        assertThrows(IllegalStateException.class, invited::withdraw);
+        assertThrows(IllegalStateException.class, declined::withdraw);
     }
 
     @Test
@@ -64,5 +106,9 @@ class ParticipationTest {
                 () -> new Participation(42L, null, Instant.now()));
         assertThrows(IllegalArgumentException.class,
                 () -> new Participation(42L, ParticipationStatus.REQUESTED, null));
+    }
+
+    private Participation invitedParticipation() {
+        return new Participation(42L, ParticipationStatus.INVITED, Instant.now());
     }
 }
