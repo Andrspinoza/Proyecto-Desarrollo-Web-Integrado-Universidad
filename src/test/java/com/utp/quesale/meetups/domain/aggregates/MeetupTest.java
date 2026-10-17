@@ -3,6 +3,7 @@ package com.utp.quesale.meetups.domain.aggregates;
 import com.utp.quesale.meetups.domain.entities.Participation;
 import com.utp.quesale.meetups.domain.enums.MeetupStatus;
 import com.utp.quesale.meetups.domain.enums.MeetupType;
+import com.utp.quesale.meetups.domain.enums.MeetupVisibility;
 import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
 import com.utp.quesale.meetups.domain.exceptions.MeetupAccessDeniedException;
 import com.utp.quesale.meetups.domain.valueobjects.Capacity;
@@ -30,6 +31,7 @@ class MeetupTest {
         Meetup meetup = createMeetup(3);
 
         assertEquals(MeetupStatus.SCHEDULED, meetup.getStatus());
+        assertEquals(MeetupVisibility.PUBLIC, meetup.getVisibility());
         assertEquals(1, meetup.getParticipations().size());
         assertEquals(ORGANIZER_ID, meetup.getParticipations().getFirst().getStudentId());
         assertEquals(ParticipationStatus.CONFIRMED, meetup.getParticipations().getFirst().getStatus());
@@ -82,6 +84,92 @@ class MeetupTest {
         meetup.requestParticipation(2L);
 
         assertThrows(IllegalStateException.class, () -> meetup.requestParticipation(2L));
+        assertThrows(IllegalStateException.class, () -> meetup.invite(2L, ORGANIZER_ID));
+    }
+
+    @Test
+    @DisplayName("Un meetup privado solo admite participantes por invitación")
+    void privateMeetupOnlyAdmitsInvitations() {
+        Meetup meetup = createMeetup(3, MeetupVisibility.PRIVATE);
+
+        assertThrows(IllegalStateException.class, () -> meetup.requestParticipation(2L));
+        meetup.invite(2L, ORGANIZER_ID);
+
+        assertEquals(ParticipationStatus.INVITED, participationOf(meetup, 2L).getStatus());
+    }
+
+    @Test
+    @DisplayName("Solo el organizador puede invitar y las invitaciones no ocupan cupo")
+    void onlyOrganizerCanInviteAndInvitationDoesNotConsumeCapacity() {
+        Meetup meetup = createMeetup(2);
+
+        assertThrows(MeetupAccessDeniedException.class, () -> meetup.invite(2L, 99L));
+        meetup.invite(2L, ORGANIZER_ID);
+        meetup.invite(3L, ORGANIZER_ID);
+
+        assertEquals(1, meetup.availableSpots());
+        assertEquals(ParticipationStatus.INVITED, participationOf(meetup, 2L).getStatus());
+        assertEquals(ParticipationStatus.INVITED, participationOf(meetup, 3L).getStatus());
+    }
+
+    @Test
+    @DisplayName("Aceptar una invitación ocupa cupo y respeta la capacidad")
+    void acceptingInvitationConsumesAvailableCapacity() {
+        Meetup meetup = createMeetup(2);
+        meetup.invite(2L, ORGANIZER_ID);
+        meetup.invite(3L, ORGANIZER_ID);
+
+        meetup.acceptInvitation(2L);
+
+        assertEquals(0, meetup.availableSpots());
+        assertEquals(ParticipationStatus.CONFIRMED, participationOf(meetup, 2L).getStatus());
+        assertThrows(IllegalStateException.class, () -> meetup.acceptInvitation(3L));
+        assertEquals(ParticipationStatus.INVITED, participationOf(meetup, 3L).getStatus());
+    }
+
+    @Test
+    @DisplayName("Solo el invitado puede aceptar o rechazar una invitación")
+    void invitationActionsRequireInvitation() {
+        Meetup meetup = createMeetup(3);
+        meetup.requestParticipation(2L);
+
+        assertThrows(IllegalStateException.class, () -> meetup.acceptInvitation(2L));
+        assertThrows(IllegalStateException.class, () -> meetup.declineInvitation(2L));
+
+        meetup.invite(3L, ORGANIZER_ID);
+        meetup.declineInvitation(3L);
+        assertEquals(ParticipationStatus.DECLINED, participationOf(meetup, 3L).getStatus());
+        assertEquals(2, meetup.availableSpots());
+    }
+
+    @Test
+    @DisplayName("Un meetup privado solo es visible para el organizador y sus invitados")
+    void privateMeetupVisibilityIsRestrictedToOrganizerAndInvitees() {
+        Meetup meetup = createMeetup(3, MeetupVisibility.PRIVATE);
+        meetup.invite(2L, ORGANIZER_ID);
+
+        assertTrue(meetup.isVisibleTo(ORGANIZER_ID));
+        assertTrue(meetup.isVisibleTo(2L));
+        assertFalse(meetup.isVisibleTo(3L));
+        assertFalse(meetup.isVisibleTo(null));
+    }
+
+    @Test
+    @DisplayName("Una solicitud pendiente no ve el meetup si pasa a privado")
+    void pendingRequesterCannotSeeMeetupAfterItBecomesPrivate() {
+        Meetup meetup = createMeetup(3);
+        meetup.requestParticipation(2L);
+
+        meetup.modify("Sesión privada", "Repaso para el curso", MeetupType.ACADEMIC,
+                MeetupVisibility.PRIVATE, futureDate(), place(), new Capacity(3), ORGANIZER_ID);
+
+        assertFalse(meetup.isVisibleTo(2L));
+    }
+
+    @Test
+    @DisplayName("Un meetup público es visible para estudiantes con ID válido")
+    void publicMeetupIsVisible() {
+        assertTrue(createMeetup(3).isVisibleTo(99L));
     }
 
     @Test
@@ -104,6 +192,18 @@ class MeetupTest {
     }
 
     @Test
+    @DisplayName("Las invitaciones solo se envían para meetups programados y futuros")
+    void cannotInviteToCancelledOrPastMeetups() {
+        Meetup cancelled = createMeetup(3);
+        cancelled.cancel(ORGANIZER_ID);
+        assertThrows(IllegalStateException.class, () -> cancelled.invite(2L, ORGANIZER_ID));
+
+        Meetup past = rehydrateMeetup(
+                LocalDateTime.now().minusDays(1), MeetupStatus.SCHEDULED, List.of(organizerParticipation()));
+        assertThrows(IllegalStateException.class, () -> past.invite(2L, ORGANIZER_ID));
+    }
+
+    @Test
     @DisplayName("Solo el organizador puede confirmar, modificar, cancelar y finalizar")
     void restrictsOrganizerOperations() {
         Meetup meetup = createMeetup(3);
@@ -113,24 +213,25 @@ class MeetupTest {
                 () -> meetup.confirmParticipation(2L, 99L));
         assertThrows(MeetupAccessDeniedException.class,
                 () -> meetup.modify("Nuevo plan", "Descripción", MeetupType.SOCIAL,
-                        futureDate(), place(), new Capacity(3), 99L));
+                        MeetupVisibility.PRIVATE, futureDate(), place(), new Capacity(3), 99L));
         assertThrows(MeetupAccessDeniedException.class, () -> meetup.cancel(99L));
         assertThrows(MeetupAccessDeniedException.class,
                 () -> meetup.finish(99L, LocalDateTime.now().plusDays(10)));
     }
 
     @Test
-    @DisplayName("El organizador puede modificar si la fecha es futura y el nuevo cupo alcanza")
+    @DisplayName("El organizador puede modificar fecha, visibilidad y cupo válidos")
     void modifiesMeetupWithValidFutureDateAndCapacity() {
         Meetup meetup = createMeetup(3);
         meetup.requestParticipation(2L);
         meetup.confirmParticipation(2L, ORGANIZER_ID);
 
         meetup.modify("Nuevo plan", "Nueva descripción", MeetupType.ACADEMIC,
-                futureDate(), place(), new Capacity(2), ORGANIZER_ID);
+                MeetupVisibility.PRIVATE, futureDate(), place(), new Capacity(2), ORGANIZER_ID);
 
         assertEquals("Nuevo plan", meetup.getTitle());
         assertEquals(MeetupType.ACADEMIC, meetup.getType());
+        assertEquals(MeetupVisibility.PRIVATE, meetup.getVisibility());
         assertEquals(2, meetup.getCapacity().value());
         assertEquals(0, meetup.availableSpots());
     }
@@ -146,10 +247,11 @@ class MeetupTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> meetup.modify("Plan", "Descripción", MeetupType.SOCIAL,
-                        LocalDateTime.now().minusDays(1), place(), new Capacity(3), ORGANIZER_ID));
+                        MeetupVisibility.PUBLIC, LocalDateTime.now().minusDays(1), place(), new Capacity(3),
+                        ORGANIZER_ID));
         assertThrows(IllegalStateException.class,
                 () -> meetup.modify("Plan", "Descripción", MeetupType.SOCIAL,
-                        futureDate(), place(), new Capacity(2), ORGANIZER_ID));
+                        MeetupVisibility.PUBLIC, futureDate(), place(), new Capacity(2), ORGANIZER_ID));
         assertEquals(3, meetup.getCapacity().value());
     }
 
@@ -187,12 +289,17 @@ class MeetupTest {
     }
 
     private Meetup createMeetup(int capacity) {
-        return createMeetupAt("Sesión de estudio", futureDate(), capacity);
+        return createMeetup(capacity, MeetupVisibility.PUBLIC);
+    }
+
+    private Meetup createMeetup(int capacity, MeetupVisibility visibility) {
+        return new Meetup(ORGANIZER_ID, UNIVERSITY_ID, "Sesión de estudio", "Repaso para el curso",
+                MeetupType.ACADEMIC, visibility, futureDate(), place(), new Capacity(capacity));
     }
 
     private Meetup createMeetupAt(String title, LocalDateTime scheduledAt, int capacity) {
-        return new Meetup(ORGANIZER_ID, UNIVERSITY_ID, title, "Repaso para el curso", MeetupType.ACADEMIC,
-                scheduledAt, place(), new Capacity(capacity));
+        return new Meetup(ORGANIZER_ID, UNIVERSITY_ID, title, "Repaso para el curso",
+                MeetupType.ACADEMIC, MeetupVisibility.PUBLIC, scheduledAt, place(), new Capacity(capacity));
     }
 
     private Meetup rehydrateMeetup(
@@ -200,7 +307,8 @@ class MeetupTest {
             MeetupStatus status,
             List<Participation> participations) {
         return new Meetup(10L, ORGANIZER_ID, UNIVERSITY_ID, "Sesión de estudio", "Repaso",
-                MeetupType.ACADEMIC, scheduledAt, place(), new Capacity(3), status, participations);
+                MeetupType.ACADEMIC, MeetupVisibility.PUBLIC, scheduledAt, place(), new Capacity(3),
+                status, participations);
     }
 
     private static LocalDateTime futureDate() {

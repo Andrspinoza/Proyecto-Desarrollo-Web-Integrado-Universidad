@@ -3,6 +3,7 @@ package com.utp.quesale.meetups.domain.aggregates;
 import com.utp.quesale.meetups.domain.entities.Participation;
 import com.utp.quesale.meetups.domain.enums.MeetupStatus;
 import com.utp.quesale.meetups.domain.enums.MeetupType;
+import com.utp.quesale.meetups.domain.enums.MeetupVisibility;
 import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
 import com.utp.quesale.meetups.domain.exceptions.MeetupAccessDeniedException;
 import com.utp.quesale.meetups.domain.valueobjects.Capacity;
@@ -28,6 +29,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
     private String title;
     private String description;
     private MeetupType type;
+    private MeetupVisibility visibility;
     private LocalDateTime scheduledAt;
     private Place place;
     private Capacity capacity;
@@ -40,10 +42,11 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
             String title,
             String description,
             MeetupType type,
+            MeetupVisibility visibility,
             LocalDateTime scheduledAt,
             Place place,
             Capacity capacity) {
-        this(null, organizerId, universityId, title, description, type, scheduledAt,
+        this(null, organizerId, universityId, title, description, type, visibility, scheduledAt,
                 place, capacity, MeetupStatus.SCHEDULED,
                 List.of(new Participation(organizerId, ParticipationStatus.CONFIRMED, Instant.now())));
 
@@ -59,6 +62,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
             String title,
             String description,
             MeetupType type,
+            MeetupVisibility visibility,
             LocalDateTime scheduledAt,
             Place place,
             Capacity capacity,
@@ -72,6 +76,8 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
             throw new IllegalArgumentException("University ID must be positive");
         if (type == null)
             throw new IllegalArgumentException("Meetup type is required");
+        if (visibility == null)
+            throw new IllegalArgumentException("Meetup visibility is required");
         if (scheduledAt == null)
             throw new IllegalArgumentException("Meetup date is required");
         if (place == null)
@@ -87,6 +93,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
         this.title = validTitle(title);
         this.description = validDescription(description);
         this.type = type;
+        this.visibility = visibility;
         this.scheduledAt = scheduledAt;
         this.place = place;
         this.capacity = capacity;
@@ -116,12 +123,11 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
     }
 
     public void requestParticipation(Long studentId) {
-        if (studentId == null || studentId <= 0)
-            throw new IllegalArgumentException("Student ID must be positive");
+        validateStudentId(studentId);
+        if (visibility == MeetupVisibility.PRIVATE)
+            throw new IllegalStateException("Participation requests are not allowed for private meetups");
         ensureJoinable(LocalDateTime.now());
-        if (findParticipation(studentId) != null)
-            throw new IllegalStateException("Student already has a participation in this meetup");
-
+        ensureNotParticipating(studentId);
         participations.add(new Participation(studentId));
     }
 
@@ -135,9 +141,35 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
         participation.confirm();
     }
 
+    public void invite(Long studentId, Long requesterId) {
+        ensureOrganizer(requesterId);
+        validateStudentId(studentId);
+        ensureUpcoming();
+        ensureNotParticipating(studentId);
+        participations.add(new Participation(studentId, ParticipationStatus.INVITED, Instant.now()));
+    }
+
+    public void acceptInvitation(Long studentId) {
+        validateStudentId(studentId);
+        ensureJoinable(LocalDateTime.now());
+
+        Participation participation = findParticipation(studentId);
+        if (participation == null)
+            throw new IllegalArgumentException("Participation was not found for student %s".formatted(studentId));
+        participation.acceptInvitation();
+    }
+
+    public void declineInvitation(Long studentId) {
+        validateStudentId(studentId);
+
+        Participation participation = findParticipation(studentId);
+        if (participation == null)
+            throw new IllegalArgumentException("Participation was not found for student %s".formatted(studentId));
+        participation.declineInvitation();
+    }
+
     public void withdraw(Long studentId) {
-        if (studentId == null || studentId <= 0)
-            throw new IllegalArgumentException("Student ID must be positive");
+        validateStudentId(studentId);
         if (organizerId.equals(studentId))
             throw new IllegalStateException("The organizer cannot withdraw from their own meetup");
 
@@ -151,6 +183,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
             String title,
             String description,
             MeetupType type,
+            MeetupVisibility visibility,
             LocalDateTime scheduledAt,
             Place place,
             Capacity capacity,
@@ -161,6 +194,8 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
             throw new IllegalArgumentException("Meetup date must be in the future");
         if (type == null)
             throw new IllegalArgumentException("Meetup type is required");
+        if (visibility == null)
+            throw new IllegalArgumentException("Meetup visibility is required");
         if (place == null)
             throw new IllegalArgumentException("Meetup place is required");
         if (capacity == null)
@@ -173,6 +208,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
         this.title = validTitle;
         this.description = validDescription;
         this.type = type;
+        this.visibility = visibility;
         this.scheduledAt = scheduledAt;
         this.place = place;
         this.capacity = capacity;
@@ -206,9 +242,25 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
                 && availableSpots() > 0;
     }
 
+    public boolean isVisibleTo(Long studentId) {
+        if (studentId == null || studentId <= 0)
+            return false;
+        if (visibility == MeetupVisibility.PUBLIC || organizerId.equals(studentId))
+            return true;
+        Participation participation = findParticipation(studentId);
+        return participation != null
+                && participation.getStatus() != ParticipationStatus.REQUESTED
+                && participation.getStatus() != ParticipationStatus.WITHDRAWN;
+    }
+
     private void ensureJoinable(LocalDateTime now) {
         if (!isJoinable(now))
             throw new IllegalStateException("Meetup is not open for participation");
+    }
+
+    private void ensureUpcoming() {
+        if (status != MeetupStatus.SCHEDULED || !scheduledAt.isAfter(LocalDateTime.now()))
+            throw new IllegalStateException("Invitations can only be sent for upcoming meetups");
     }
 
     private void ensureOrganizer(Long requesterId) {
@@ -219,6 +271,16 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
     private void ensureScheduled() {
         if (status != MeetupStatus.SCHEDULED)
             throw new IllegalStateException("Only scheduled meetups can be modified");
+    }
+
+    private void ensureNotParticipating(Long studentId) {
+        if (findParticipation(studentId) != null)
+            throw new IllegalStateException("Student already has a participation in this meetup");
+    }
+
+    private static void validateStudentId(Long studentId) {
+        if (studentId == null || studentId <= 0)
+            throw new IllegalArgumentException("Student ID must be positive");
     }
 
     private Participation findParticipation(Long studentId) {
@@ -278,6 +340,10 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
 
     public MeetupType getType() {
         return type;
+    }
+
+    public MeetupVisibility getVisibility() {
+        return visibility;
     }
 
     public LocalDateTime getScheduledAt() {
