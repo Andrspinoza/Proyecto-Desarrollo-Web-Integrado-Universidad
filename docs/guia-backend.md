@@ -627,36 +627,80 @@ Para cada contexto: agregados, reglas que **deben tener test** y endpoints (todo
 ### 8.4 `meetups` — Jesús
 
 - **`Meetup`** (raíz): `organizerId`, `universityId`, `title` (≤100), `description` (≤500),
-  `type`, `scheduledAt` (`LocalDateTime`), `place` (VO `Place`: nombre ≤120, dirección ≤200,
-  distrito ≤60), `capacity` (VO `Capacity`: máximo 2–50), `status` y su entidad hija
-  **`Participation`**: `studentId`, `status`, `registeredAt`.
+  `type`, `visibility`, `scheduledAt` (`LocalDateTime`), `place` (VO `Place`: nombre ≤120,
+  dirección ≤200, distrito ≤60), `capacity` (VO `Capacity`: máximo 2–50), `status` y su entidad
+  hija **`Participation`**: `studentId`, `status`, `registeredAt`.
   - Al crearse, el organizador queda como participación **CONFIRMED** (ocupa un cupo).
   - `requestParticipation(studentId)`, `confirmParticipation(studentId, requesterId)`,
-    `withdraw(studentId)`, `modify(..., requesterId)`, `cancel(requesterId)`,
-    `finish(requesterId, now)`, `availableSpots()`.
+    `invite(studentId, requesterId)`, `acceptInvitation(studentId)`,
+    `declineInvitation(studentId)`, `withdraw(studentId)`, `modify(..., requesterId)`,
+    `cancel(requesterId)`, `finish(requesterId, now)`, `availableSpots()`.
   - Especificación `MeetupIsJoinable`: programado, con cupo y fecha futura.
-  - Eventos: `MeetupCreatedEvent`, `ParticipationRequestedEvent`, `ParticipationConfirmedEvent`,
-    `MeetupCancelledEvent`.
+- **Visibilidad** (enum `MeetupVisibility`). Regla de sentido común: **nadie recibe un aviso que
+  el organizador no decidió mandar**. Una cita es un meetup `PRIVATE` con cupo 2.
+
+  | Valor | Quién lo ve | Cómo se entra |
+  |---|---|---|
+  | `PUBLIC` | Todos los de su universidad | Solicitar y que el organizador confirme, o por invitación |
+  | `PRIVATE` | Solo el organizador y sus invitados | **Solo por invitación**; solicitar está prohibido |
+
+  Para esta entrega solo existen `PUBLIC` y `PRIVATE`. La visibilidad `CONNECTIONS` (solo para las
+  conexiones del organizador) se agrega **después**, porque necesita `connections`.
+- **Estados de participación** (`ParticipationStatus`): `REQUESTED`, `INVITED`, `CONFIRMED`,
+  `DECLINED`, `WITHDRAWN`. Solo `CONFIRMED` ocupa cupo; aceptar una invitación también respeta el cupo.
+- **Eventos** (records en `domain/events`), con el **estilo del profesor**: solo ids y
+  `Instant occurredAt`, como `EnrollmentConfirmedEvent(enrollmentId, studentId, courseId, occurredAt)`.
+  Cada evento se registra **dentro del método que lo provoca**. `MeetupCreatedEvent` se registra en
+  el constructor de creación, igual que el profesor: no notifica a nadie, así que no hace falta
+  `markAsCreated()`. El `meetupId` es el `referenceId` de la notificación en `messaging`:
+
+  | Evento | Campos | Lo registra | Se notifica a |
+  |---|---|---|---|
+  | `MeetupCreatedEvent` | `meetupId`, `organizerId`, `occurredAt` | Constructor de creación | Nadie |
+  | `ParticipationRequestedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `requestParticipation` | `organizerId` |
+  | `ParticipationConfirmedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `confirmParticipation` | `studentId` |
+  | `ParticipationInvitedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `invite` | `studentId` |
+  | `InvitationAcceptedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `acceptInvitation` | `organizerId` |
+  | `InvitationDeclinedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `declineInvitation` | `organizerId` (a nadie más) |
+  | `MeetupCancelledEvent` | `meetupId`, `organizerId`, `participantIds`, `occurredAt` | `cancel` | Cada id de `participantIds` |
+
+  `participantIds` son quienes tienen participación `REQUESTED`, `INVITED` o `CONFIRMED`, **sin el
+  organizador** (`List.copyOf`).
+- **Excepciones**, con el **estilo del profesor**: pocas y propias solo para «no encontrado»; las
+  reglas usan `IllegalStateException` (el manejador devuelve 409) y los datos inválidos
+  `IllegalArgumentException` (400).
+
+  | Excepción | Hereda de | Cuándo |
+  |---|---|---|
+  | `MeetupNotFoundException` | `ResourceNotFoundException` (404) | El meetup no existe |
+  | `ParticipationNotFoundException` | `ResourceNotFoundException` (404) | Confirmar, aceptar, rechazar o retirar sin participación previa |
+  | `MeetupAccessDeniedException` | `ForbiddenOperationException` (403) | Quien no es el organizador intenta modificar, cancelar, confirmar, invitar o finalizar |
+  | `IllegalStateException` | — (409) | Cupo lleno, meetup no disponible, ya participa, solicitar en un meetup `PRIVATE`, el organizador se retira, nuevo cupo menor que los confirmados |
+
 - **Reglas con test:** nunca se supera el cupo; cancelado, finalizado o pasado no acepta
-  participantes; solo el organizador modifica, cancela, confirma o finaliza; fecha futura al
-  crear y al reprogramar (no al rehidratar); el nuevo cupo no puede ser menor que los
-  confirmados; nadie participa dos veces; el organizador no se retira de su propio meetup.
-- **Concurrencia por el último cupo:** las operaciones que confirman cargan el meetup con
+  participantes; solo el organizador modifica, cancela, confirma, invita o finaliza; en `PRIVATE`
+  nadie puede solicitar; solo el invitado acepta o rechaza su invitación; fecha futura al crear y
+  al reprogramar (no al rehidratar); el nuevo cupo no puede ser menor que los confirmados; nadie
+  participa dos veces; el organizador no se retira de su propio meetup.
+- **Concurrencia por el último cupo:** las operaciones que confirman o aceptan cargan el meetup con
   `findByIdForUpdate`, implementado en `MeetupJpaRepository` con
   `@Lock(LockModeType.PESSIMISTIC_WRITE)` y `@Query("select m from MeetupJpaEntity m where m.id = :id")`.
   Además, `UNIQUE (meetup_id, student_id)` en `participations`.
-- **Reglas en el servicio de aplicación:** el participante es de la misma universidad; límites
-  del plan (meetups organizados activos y solicitudes diarias).
+- **Después de la entrega** (necesitan otros módulos): el participante es de la misma universidad;
+  solo se invita a **conexiones** y nunca a alguien bloqueado; la visibilidad `CONNECTIONS`; y los
+  límites del plan, que se revisan en la capa de aplicación.
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| POST | `/meetups` | Crear (un plan para dos es un meetup con cupo 2) |
-| GET | `/meetups?type&status&from&to` | Listar los de mi universidad |
-| GET | `/meetups/mine` | Los que organizo o en los que participo |
-| GET · PUT | `/meetups/{id}` | Obtener · modificar *(organizador)* |
+| POST | `/meetups` | Crear, con `visibility` (una cita: `PRIVATE` con cupo 2) |
+| GET | `/meetups?type&status&from&to` | Listar los **públicos** de mi universidad |
+| GET | `/meetups/mine` | Los que organizo, en los que participo o a los que me invitaron |
+| GET · PUT | `/meetups/{id}` | Obtener · modificar *(organizador)*; un `PRIVATE` solo lo ven organizador e invitados |
 | PATCH | `/meetups/{id}/cancel` · `/finish` | *(organizador)* |
-| POST | `/meetups/{id}/participations` | Solicitar participar |
+| POST | `/meetups/{id}/participations` | Solicitar participar (solo `PUBLIC`) |
 | PATCH | `/meetups/{id}/participations/{studentId}/confirm` | Confirmar *(organizador)* |
+| POST | `/meetups/{id}/invitations` | Invitar a un estudiante *(organizador)* |
+| PATCH | `/meetups/{id}/invitations/me/accept` · `/decline` | Aceptar o rechazar mi invitación |
 | PATCH | `/meetups/{id}/participations/me/withdraw` | Retirarme |
 | GET | `/meetups/{id}/participations` | Ver participantes |
 
@@ -684,10 +728,13 @@ Para cada contexto: agregados, reglas que **deben tener test** y endpoints (todo
 - **`Message`**: `senderId`, `recipientId`, `content` (1–1000), `sentAt`, `readAt`.
   `markAsRead(byStudentId)` solo el destinatario.
 - **`Notification`**: `recipientStudentId`, `type` (`NotificationType`: CONNECTION_REQUESTED,
-  CONNECTION_ACCEPTED, PARTICIPATION_REQUESTED, PARTICIPATION_CONFIRMED, MEETUP_CANCELLED,
-  MESSAGE_RECEIVED), `title`, `referenceId`, `createdAt`, `readAt`.
-- **Manejadores de eventos** (`application/internal/eventhandlers`, con `@EventListener`):
-  crean notificaciones a partir de los eventos de `connections` y `meetups`.
+  CONNECTION_ACCEPTED, PARTICIPATION_REQUESTED, PARTICIPATION_CONFIRMED, PARTICIPATION_INVITED,
+  INVITATION_ACCEPTED, INVITATION_DECLINED, MEETUP_CANCELLED, MESSAGE_RECEIVED), `title`,
+  `referenceId`, `createdAt`, `readAt`.
+- **Manejadores de eventos** (`@EventListener`): crean notificaciones a partir de los eventos
+  de `connections` y `meetups`. Los campos de los eventos de `meetups` y a quién se notifica cada
+  uno están en 8.4 (tabla de eventos); `meetupId` es el `referenceId`. Crear un meetup **no**
+  notifica a nadie: solo se avisa a quien se invita, a quien se acepta y al organizador.
 - **Reglas:** solo se escriben mensajes entre estudiantes **conectados y no bloqueados**; solo
   el destinatario marca como leído.
 

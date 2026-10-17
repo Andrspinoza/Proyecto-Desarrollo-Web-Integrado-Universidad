@@ -56,49 +56,40 @@ repositorio** desde la semana 11 (D-15).
 
 ---
 
-## 2. Estado actual y quién sigue — se actualiza en cada merge
+## 2. Estado actual y quién sigue
 
-> **El estado al día está en [`docs/seguimiento/README.md`](docs/seguimiento/README.md)**
-> (piezas B0 a B7 y qué hace cada integrante ahora). Si la tabla de abajo difiere, **manda ese
-> panel**. Antes de empezar cualquier tarea, el agente lo lee junto con
-> `docs/seguimiento/<modulo>.md`.
-
-**Esta es la tabla que manda.** Quien fusiona un PR que cambia una fila, la actualiza en ese
-mismo PR (o André al fusionar).
+**El estado al día vive en un solo lugar: [`docs/seguimiento/README.md`](docs/seguimiento/README.md)**
+(estado de cada pieza B y qué hace cada integrante ahora). **Antes de empezar cualquier tarea, el
+agente lo lee**, junto con `docs/seguimiento/<modulo>.md`. Aquí no se repite el estado para que
+nunca se contradigan.
 
 Qué son **B0, B1, B2…**: piezas que **otros necesitan para avanzar** (ruta crítica). Van en
 cadena por las llaves foráneas de MySQL: sin el proyecto (B0) nada compila; sin la tabla
 `universities` (B1) no existe la FK de `students`; sin la tabla `students` (B2) no existen las
 FKs de conexiones, meetups, comunidades, mensajes ni reportes.
 
-| # | Pieza | Dueño | Desbloquea a | Estado |
-|---|---|---|---|---|
-| B0 | Andamiaje: `pom.xml`, Maven Wrapper, `application.properties`, `compose.yaml`, `shared` (excepciones, manejador de errores, header `X-Student-Id`, Swagger) | André | **Todos** (sin esto nada compila) | ✅ Entregado en `main` |
-| B1 | `iam`: agregado `University` completo (dominio → JPA → endpoint → test H2). **Es el ejemplo de referencia del repo** | André | Fernando (FK de `students`) y todos como modelo | ✅ Entregado en `main` |
-| B2 | `profiles`: `StudentJpaEntity` con FK a `universities` | Fernando | Ubes, Jesús, Mafer (sus FKs a `students`) | 🔨 Puede empezar — Fernando |
-| B3 | Interfaces de las fachadas (solo firmas, guía 6.3) | Cada dueño | Quien las consume | ⏳ Después de cada dominio |
-| B4 | Eventos de dominio de `connections` y `meetups` | Ubes, Jesús | Mafer (`messaging`) | ⏳ |
+| # | Pieza | Dueño |
+|---|---|---|
+| B0 | Andamiaje: `pom.xml`, Maven Wrapper, `application.properties`, `compose.yaml`, `shared` | André |
+| B1 | `iam`: `University` completo. Es el ejemplo de referencia del repo | André |
+| B2 | `profiles`: `StudentJpaEntity` con FK a `universities` | Fernando |
+| B3 | Interfaces de las fachadas (solo firmas, guía 6.3) | Cada dueño |
+| B4 | Eventos de dominio de `connections` y `meetups` | Ubes, Jesús |
+| B5 | Capa de aplicación de `iam` (CQRS) y clase base pura en `shared`: modelo para todos | André |
+| B6 | `Message` mínimo con `MessageSentEvent` | Mafer |
+| B7 | WebSocket del chat (D-17) | André |
 
-**Quién sigue ahora:** B0 y B1 ya están en `main`. **Todos** traen `main` a su rama
-(sección 5) y arrancan su **dominio con tests** en paralelo. **Fernando hace B2 primero**
-(`StudentJpaEntity`); los demás agregan su persistencia cuando B2 esté en `main`.
+**Al terminar un PR**, el agente actualiza el archivo de seguimiento de su módulo (sección 6) y,
+si el PR entrega una pieza B, la persona avisa a André para que actualice el panel.
 
-| Integrante | Qué hace hoy | Puede empezar cuando | Después |
-|---|---|---|---|
-| André | `Account`, fachadas de `iam` y `subscriptions` | Ya | `subscriptions`, revisar PRs |
-| Fernando | Dominio de `profiles` y **B2** | Ya | Resto de persistencia → endpoints → EER y diccionario |
-| Ubes | Dominio de `moderation` y `connections` | Ya | Fachadas → persistencia (tras B2) → endpoints → Postman `00-setup` |
-| Jesús | Dominio de `meetups` con tests | Ya | Persistencia con bloqueo pesimista (tras B2) → endpoints |
-| Mafer | Dominio de `communities` | Ya | Persistencia (tras B2) → luego `messaging` (tras B3 de Ubes y B4) |
-
-**Mientras esperas B2** haz lo que no depende de nadie: dominio y tests, resources y
+**Mientras esperas una pieza** haz lo que no depende de nadie: dominio y tests, resources y
 assemblers, colección de Postman. Toma `iam` como modelo. No crees entidades de otro contexto.
 
 ---
 
 ## 3. Preguntas frecuentes
 
-**¿Qué me toca y en qué orden?** Sección 2 (tabla «Quién sigue») y sección 7.
+**¿Qué me toca y en qué orden?** El panel `docs/seguimiento/README.md` (sección 2) y la sección 7.
 
 **¿Por qué no puedo empezar ya?** Porque sin B0 no hay `pom.xml` y nada compila. Con B0 en
 `main` ya puedes hacer **todo tu dominio y sus tests**: el dominio solo depende de `shared`.
@@ -116,9 +107,10 @@ commits progresivos. El profesor revisa quién contribuyó y qué puede explicar
 **¿Dónde veo un ejemplo completo?** `src/main/java/com/utp/quesale/iam/` y su test en
 `src/test/java/com/utp/quesale/iam/`.
 
-**¿Y la capa de aplicación?** Todavía no. El profesor la enseña el 15-oct. Hasta entonces el
-controller usa la interfaz del repositorio de dominio (guía 1.4). Cuando la enseñe, se agrega
-sin tocar el dominio ni la persistencia.
+**¿Y la capa de aplicación?** El profesor la enseñó el 15-oct con CQRS (guía, sección 4,
+`application`). **Se escribe cuando B5 esté en `main`**, porque `iam` será el modelo. Hasta entonces
+el controller usa la interfaz del repositorio de dominio (guía 1.4). Se agrega sin tocar el
+dominio ni la persistencia.
 
 **¿Cómo sé quién hace la petición si no hay login?** Header `X-Student-Id` con el id del
 estudiante (D-16). JWT llegará cuando el profesor lo enseñe.
@@ -151,7 +143,7 @@ Estados: ✅ decidida · 🟡 propuesta, se puede cambiar · ❓ pendiente · �
 |---|---|---|---|
 | D-01 | ✅ | Spring Boot **4.1.1**, Java 21, Maven, Jar, Properties | Igual al molde del profesor |
 | D-02 | ✅ | **Sin Lombok en `domain` ni en `application`**; solo en entidades JPA | Indicación del profesor: el dominio no depende de librerías externas |
-| D-03 | 🟡 | Capa `application` **pendiente**: se escribe cuando el profesor la enseñe (15-oct). Mientras, el controller usa el repositorio de dominio | Indicación del profesor del 11-oct |
+| D-03 | ✅ | Capa `application` con **CQRS** como la enseñó el profesor el 15-oct (guía, sección 4). Se escribe cuando B5 esté en `main`; mientras, el controller usa el repositorio de dominio | Indicación del profesor del 11 y 15-oct |
 | D-04 | ⛔ | ~~Identidad por header `X-Account-Id`~~ — reemplazada por D-16 | `Account` aún no existe |
 | D-05 | ✅ | Entre contextos, FKs reales en MySQL vía `@ManyToOne` en las entidades JPA; el dominio usa `Long` | Sin FKs, el EER Diagram de Workbench sale sin relaciones |
 | D-06 | ✅ | **Swagger** (springdoc) como tecnología nueva propuesta; pruebas también en Postman y Thunder Client | Documenta y prueba la API en el navegador |
@@ -468,4 +460,5 @@ Se llena después de cada revisión. Cada observación genera una tarea o un cam
 | 2026-10-11 | André · Claude Code | B0 y B1 marcadas como entregadas en la tabla de estado; Fernando puede empezar B2 | PR #2 fusionado; B1 en el PR siguiente |
 | 2026-10-15 | André · Claude Code | Indicaciones del profesor del 15-oct en la sección 13: CQRS, varios contextos delimitados, Swagger y criterio de evaluación | Clase y conversación con el profesor del 15-oct |
 | 2026-10-15 | André · Claude Code | D-17: chat en tiempo real por WebSocket (STOMP) y su contrato en la guía, 8.6 | El diseño de `messaging` solo contemplaba REST; un chat debe entregar al instante |
+| 2026-10-16 | André · Claude Code | Sección 2 sin tablas de estado: el estado vive solo en `docs/seguimiento/README.md`; D-03 decidida con la estructura CQRS; piezas B5 a B7 | Evitar dos fuentes de estado que se contradigan; PR #4, #5 y #7 fusionados |
 | 2026-10-15 | André · Claude Code | Reglas para partir el trabajo en PR («Punto de PR») y archivos `docs/seguimiento/<modulo>.md` | Los agentes no sabían dónde cortar un PR y el avance solo constaba en commits y PR, ilegibles sin `gh` |
