@@ -31,7 +31,7 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
     private static final int TITLE_MAX_LENGTH = 100;
     private static final int DESCRIPTION_MAX_LENGTH = 500;
 
-    private final Long id;
+    private Long id;
     private final Long organizerId;
     private final Long universityId;
     private String title;
@@ -344,6 +344,13 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
         return id;
     }
 
+    public void assignId(Long id) {
+        if (id == null || id <= 0)
+            throw new IllegalArgumentException("Meetup ID must be positive");
+        if (this.id != null && !this.id.equals(id))
+            throw new IllegalStateException("Meetup ID is already assigned");
+        this.id = id;
+    }
     public Long getOrganizerId() {
         return organizerId;
     }

@@ -393,6 +393,18 @@ class MeetupTest {
         assertEquals(ORGANIZER_ID, organizerId);
         assertEquals(expectedStudentId, studentId);
     }
+    @Test
+    @DisplayName("El id generado se asigna sin perder los eventos del agregado")
+    void assignsPersistenceIdWithoutLosingDomainEvents() {
+        Meetup meetup = createMeetup(3);
+
+        meetup.assignId(42L);
+
+        assertEquals(42L, meetup.getId());
+        assertEquals(1, meetup.pullDomainEvents().size());
+        assertThrows(IllegalStateException.class, () -> meetup.assignId(43L));
+        assertThrows(IllegalArgumentException.class, () -> createMeetup(3).assignId(0L));
+    }
     private Meetup createMeetup(int capacity) {
         return createMeetup(capacity, MeetupVisibility.PUBLIC);
     }
