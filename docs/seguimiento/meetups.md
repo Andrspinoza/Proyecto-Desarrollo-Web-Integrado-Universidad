@@ -4,11 +4,11 @@ Solo Jesús edita este archivo, en el último commit de cada PR.
 
 | Bloque | Estado | PR | Notas |
 |---|---|---|---|
-| Dominio y tests | 🔨 | Por abrir | Dominio, eventos, excepciones y `MeetupRepository` listos para PR |
-| Persistencia y test H2 | ⏳ | | B2 (`StudentJpaEntity`) ya está en `main`; implementar con bloqueo pesimista |
+| Dominio y tests | 🔨 | Por abrir | Dominio, eventos, excepciones y `MeetupRepository` completos |
+| Persistencia y test H2 | 🔨 | Por abrir | Entidades JPA, repositorio con bloqueo pesimista, mapper, adapter y pruebas H2 completos |
 | Capa de aplicación | ⏳ | | Espera B5 en `main` |
-| Resources y endpoints | ⏳ | | |
+| Resources y endpoints | ⏳ | | Después de la capa de aplicación |
 
-**Siguiente paso:** abrir PR del bloque de dominio y tests; después de que se fusione, traer `main` e iniciar persistencia con bloqueo pesimista.
+**Siguiente paso:** subir la rama y abrir un PR con dominio y persistencia. `main` se actualizó antes de preparar el PR.
 
-**Última actualización:** 2026-10-16 · Jesús
+**Última actualización:** 2026-10-17 · Jesús
