@@ -278,14 +278,17 @@ com.utp.quesale
     │   ├── events/               records de eventos
     │   ├── exceptions/           una por caso
     │   ├── repositories/         interfaces (contratos)
-    │   ├── services/             servicios de dominio y contratos de servicios de aplicación
-    │   ├── commands/             records
-    │   └── queries/              records
-    ├── application/
-    │   ├── internal/commandservices/   implementaciones de XCommandService
-    │   ├── internal/queryservices/     implementaciones de XQueryService
-    │   ├── internal/eventhandlers/     manejadores de eventos
-    │   └── acl/                        implementación de la fachada del contexto
+    │   └── services/             servicios de dominio (reglas que no pertenecen a una entidad)
+    ├── application/              CQRS del profesor (ver sección 4); el modelo es `iam`
+    │   ├── commands/             un record por operación que modifica
+    │   ├── queries/              un record por consulta
+    │   ├── dtos/                 resultado que devuelven los handlers
+    │   ├── assemblers/           del agregado al DTO, sin depender de HTTP
+    │   ├── handlers/
+    │   │   ├── commands/         un @Service por agregado, con un handle(...) por command
+    │   │   └── queries/          un @Service por query
+    │   ├── eventhandlers/        reaccionan a eventos de otros contextos (@EventListener)
+    │   └── acl/                  implementación de la fachada del contexto
     ├── infrastructure/persistence/jpa/{entities,repositories,mappers,adapters}
     └── interfaces/
         ├── controllers/
@@ -326,18 +329,35 @@ Cada carpeta se crea **cuando se implementa** algo que va en ella; no se crean c
 - **Cada adapter tiene su prueba `@DataJpaTest` sobre H2** (D-14): guarda un objeto de dominio,
   lo vuelve a leer y verifica que no se perdió nada. Modelo: el test de `iam` del repo.
 
-### `application` — pendiente (D-03)
+### `application` — CQRS del profesor (clase del 15-oct)
 
-**Todavía no se escribe.** El profesor la enseña en la clase del 15-oct. Hasta entonces el
-controller coordina directamente con la interfaz del repositorio (sección 1.4). Lo que sigue es
-la idea general; se reemplaza por la versión del profesor cuando la muestre:
+> **`iam` es el modelo** (B5): copia su estructura en `src/main/java/com/utp/quesale/iam/application/`
+> y sus pruebas, sin inventar otra. Primero termina el dominio y la persistencia con test H2 de tu
+> módulo; después escribes su capa de aplicación. Esta sección reemplaza la idea anterior de
+> `XCommandService` y `application/internal`, que ya **no se usa**.
 
-- `XCommandService` / `XQueryService` son interfaces en `domain/services`; sus implementaciones
-  `@Service` van en `application/internal`. Comandos con `@Transactional`, consultas con
-  `@Transactional(readOnly = true)`.
-- **Solo orquestan:** resolver identidad → validar con fachadas → cargar el agregado → invocar
-  su método → guardar → publicar eventos. Las reglas del negocio no se escriben aquí.
-- Inyección siempre por constructor. Sin Lombok.
+Estructura, tomada del código `learning-platform-semana9-corregido` del profesor:
+
+```text
+application/
+├── commands/        un record por operación que modifica (CreateStudentCommand)
+├── queries/         un record por consulta (GetStudentQuery)
+├── dtos/            el resultado que devuelve el handler (StudentDto)
+├── assemblers/      pasa del agregado al DTO, sin depender de HTTP
+└── handlers/
+    ├── commands/    una clase @Service por agregado, con un handle(...) por command
+    └── queries/     una clase @Service por query, con @Transactional(readOnly = true)
+```
+
+- El **handler de command** carga el agregado con el repositorio del dominio, ejecuta la regla,
+  guarda y despacha los eventos con `DomainEventDispatcher`. Lleva `@Transactional`.
+- Las **reglas del negocio** siguen en el agregado; el handler solo coordina.
+- Los eventos se publican **después del commit**; el despachador está en `shared`.
+- El **controller** arma el command desde el resource, llama al handler y arma el resource de
+  respuesta **a partir del DTO**. El `@Transactional` del controller desaparece.
+- Errores: se mantienen nuestras excepciones propias (`XNotFoundException` → 404), no
+  `IllegalArgumentException`.
+- Inyección por constructor. Sin Lombok (D-02).
 
 ### `interfaces`
 
@@ -359,7 +379,8 @@ la idea general; se reemplaza por la versión del profesor cuando la muestre:
 Un contexto **nunca importa el dominio de otro**. Solo puede usar:
 
 1. La **fachada** del otro contexto (`interfaces/acl`), con tipos primitivos (sección 6).
-2. Sus **eventos** (`domain/events`), que son su lenguaje publicado, solo en `eventhandlers`.
+2. Sus **eventos** (`domain/events`), que son su lenguaje publicado, solo en
+   `application/eventhandlers`.
 3. Sus **entidades JPA**, solo desde `infrastructure` y solo para FKs (D-05).
 
 ---
@@ -448,6 +469,10 @@ estudiante que «hace» la petición. Es lo más simple mientras no exista login
 enseñe Spring Security + JWT, el `studentId` saldrá del token y este header desaparece; el
 dominio no cambia. Las operaciones de administrador se agregan con `iam` completo
 (`IamContextFacade.isAdmin`).
+
+**Endpoints de administrador (por ejemplo, revisar o descartar un reporte).** Hasta tener `Account`
+y JWT, el valor de `X-Student-Id` se usa como `adminAccountId` y **no se valida el rol**. Dilo en
+Swagger y en Postman como provisional. Con JWT, el id sale del token y se valida el rol.
 
 ### 6.3 Fachadas — firmas fijas (contrato primero)
 
@@ -610,36 +635,80 @@ Para cada contexto: agregados, reglas que **deben tener test** y endpoints (todo
 ### 8.4 `meetups` — Jesús
 
 - **`Meetup`** (raíz): `organizerId`, `universityId`, `title` (≤100), `description` (≤500),
-  `type`, `scheduledAt` (`LocalDateTime`), `place` (VO `Place`: nombre ≤120, dirección ≤200,
-  distrito ≤60), `capacity` (VO `Capacity`: máximo 2–50), `status` y su entidad hija
-  **`Participation`**: `studentId`, `status`, `registeredAt`.
+  `type`, `visibility`, `scheduledAt` (`LocalDateTime`), `place` (VO `Place`: nombre ≤120,
+  dirección ≤200, distrito ≤60), `capacity` (VO `Capacity`: máximo 2–50), `status` y su entidad
+  hija **`Participation`**: `studentId`, `status`, `registeredAt`.
   - Al crearse, el organizador queda como participación **CONFIRMED** (ocupa un cupo).
   - `requestParticipation(studentId)`, `confirmParticipation(studentId, requesterId)`,
-    `withdraw(studentId)`, `modify(..., requesterId)`, `cancel(requesterId)`,
-    `finish(requesterId, now)`, `availableSpots()`.
+    `invite(studentId, requesterId)`, `acceptInvitation(studentId)`,
+    `declineInvitation(studentId)`, `withdraw(studentId)`, `modify(..., requesterId)`,
+    `cancel(requesterId)`, `finish(requesterId, now)`, `availableSpots()`.
   - Especificación `MeetupIsJoinable`: programado, con cupo y fecha futura.
-  - Eventos: `MeetupCreatedEvent`, `ParticipationRequestedEvent`, `ParticipationConfirmedEvent`,
-    `MeetupCancelledEvent`.
+- **Visibilidad** (enum `MeetupVisibility`). Regla de sentido común: **nadie recibe un aviso que
+  el organizador no decidió mandar**. Una cita es un meetup `PRIVATE` con cupo 2.
+
+  | Valor | Quién lo ve | Cómo se entra |
+  |---|---|---|
+  | `PUBLIC` | Todos los de su universidad | Solicitar y que el organizador confirme, o por invitación |
+  | `PRIVATE` | Solo el organizador y sus invitados | **Solo por invitación**; solicitar está prohibido |
+
+  Para esta entrega solo existen `PUBLIC` y `PRIVATE`. La visibilidad `CONNECTIONS` (solo para las
+  conexiones del organizador) se agrega **después**, porque necesita `connections`.
+- **Estados de participación** (`ParticipationStatus`): `REQUESTED`, `INVITED`, `CONFIRMED`,
+  `DECLINED`, `WITHDRAWN`. Solo `CONFIRMED` ocupa cupo; aceptar una invitación también respeta el cupo.
+- **Eventos** (records en `domain/events`), con el **estilo del profesor**: solo ids y
+  `Instant occurredAt`, como `EnrollmentConfirmedEvent(enrollmentId, studentId, courseId, occurredAt)`.
+  Cada evento se registra **dentro del método que lo provoca**. `MeetupCreatedEvent` se registra en
+  el constructor de creación, igual que el profesor: no notifica a nadie, así que no hace falta
+  `markAsCreated()`. El `meetupId` es el `referenceId` de la notificación en `messaging`:
+
+  | Evento | Campos | Lo registra | Se notifica a |
+  |---|---|---|---|
+  | `MeetupCreatedEvent` | `meetupId`, `organizerId`, `occurredAt` | Constructor de creación | Nadie |
+  | `ParticipationRequestedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `requestParticipation` | `organizerId` |
+  | `ParticipationConfirmedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `confirmParticipation` | `studentId` |
+  | `ParticipationInvitedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `invite` | `studentId` |
+  | `InvitationAcceptedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `acceptInvitation` | `organizerId` |
+  | `InvitationDeclinedEvent` | `meetupId`, `organizerId`, `studentId`, `occurredAt` | `declineInvitation` | `organizerId` (a nadie más) |
+  | `MeetupCancelledEvent` | `meetupId`, `organizerId`, `participantIds`, `occurredAt` | `cancel` | Cada id de `participantIds` |
+
+  `participantIds` son quienes tienen participación `REQUESTED`, `INVITED` o `CONFIRMED`, **sin el
+  organizador** (`List.copyOf`).
+- **Excepciones**, con el **estilo del profesor**: pocas y propias solo para «no encontrado»; las
+  reglas usan `IllegalStateException` (el manejador devuelve 409) y los datos inválidos
+  `IllegalArgumentException` (400).
+
+  | Excepción | Hereda de | Cuándo |
+  |---|---|---|
+  | `MeetupNotFoundException` | `ResourceNotFoundException` (404) | El meetup no existe |
+  | `ParticipationNotFoundException` | `ResourceNotFoundException` (404) | Confirmar, aceptar, rechazar o retirar sin participación previa |
+  | `MeetupAccessDeniedException` | `ForbiddenOperationException` (403) | Quien no es el organizador intenta modificar, cancelar, confirmar, invitar o finalizar |
+  | `IllegalStateException` | — (409) | Cupo lleno, meetup no disponible, ya participa, solicitar en un meetup `PRIVATE`, el organizador se retira, nuevo cupo menor que los confirmados |
+
 - **Reglas con test:** nunca se supera el cupo; cancelado, finalizado o pasado no acepta
-  participantes; solo el organizador modifica, cancela, confirma o finaliza; fecha futura al
-  crear y al reprogramar (no al rehidratar); el nuevo cupo no puede ser menor que los
-  confirmados; nadie participa dos veces; el organizador no se retira de su propio meetup.
-- **Concurrencia por el último cupo:** las operaciones que confirman cargan el meetup con
+  participantes; solo el organizador modifica, cancela, confirma, invita o finaliza; en `PRIVATE`
+  nadie puede solicitar; solo el invitado acepta o rechaza su invitación; fecha futura al crear y
+  al reprogramar (no al rehidratar); el nuevo cupo no puede ser menor que los confirmados; nadie
+  participa dos veces; el organizador no se retira de su propio meetup.
+- **Concurrencia por el último cupo:** las operaciones que confirman o aceptan cargan el meetup con
   `findByIdForUpdate`, implementado en `MeetupJpaRepository` con
   `@Lock(LockModeType.PESSIMISTIC_WRITE)` y `@Query("select m from MeetupJpaEntity m where m.id = :id")`.
   Además, `UNIQUE (meetup_id, student_id)` en `participations`.
-- **Reglas en el servicio de aplicación:** el participante es de la misma universidad; límites
-  del plan (meetups organizados activos y solicitudes diarias).
+- **Después de la entrega** (necesitan otros módulos): el participante es de la misma universidad;
+  solo se invita a **conexiones** y nunca a alguien bloqueado; la visibilidad `CONNECTIONS`; y los
+  límites del plan, que se revisan en la capa de aplicación.
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| POST | `/meetups` | Crear (un plan para dos es un meetup con cupo 2) |
-| GET | `/meetups?type&status&from&to` | Listar los de mi universidad |
-| GET | `/meetups/mine` | Los que organizo o en los que participo |
-| GET · PUT | `/meetups/{id}` | Obtener · modificar *(organizador)* |
+| POST | `/meetups` | Crear, con `visibility` (una cita: `PRIVATE` con cupo 2) |
+| GET | `/meetups?type&status&from&to` | Listar los **públicos** de mi universidad |
+| GET | `/meetups/mine` | Los que organizo, en los que participo o a los que me invitaron |
+| GET · PUT | `/meetups/{id}` | Obtener · modificar *(organizador)*; un `PRIVATE` solo lo ven organizador e invitados |
 | PATCH | `/meetups/{id}/cancel` · `/finish` | *(organizador)* |
-| POST | `/meetups/{id}/participations` | Solicitar participar |
+| POST | `/meetups/{id}/participations` | Solicitar participar (solo `PUBLIC`) |
 | PATCH | `/meetups/{id}/participations/{studentId}/confirm` | Confirmar *(organizador)* |
+| POST | `/meetups/{id}/invitations` | Invitar a un estudiante *(organizador)* |
+| PATCH | `/meetups/{id}/invitations/me/accept` · `/decline` | Aceptar o rechazar mi invitación |
 | PATCH | `/meetups/{id}/participations/me/withdraw` | Retirarme |
 | GET | `/meetups/{id}/participations` | Ver participantes |
 
@@ -667,20 +736,41 @@ Para cada contexto: agregados, reglas que **deben tener test** y endpoints (todo
 - **`Message`**: `senderId`, `recipientId`, `content` (1–1000), `sentAt`, `readAt`.
   `markAsRead(byStudentId)` solo el destinatario.
 - **`Notification`**: `recipientStudentId`, `type` (`NotificationType`: CONNECTION_REQUESTED,
-  CONNECTION_ACCEPTED, PARTICIPATION_REQUESTED, PARTICIPATION_CONFIRMED, MEETUP_CANCELLED,
-  MESSAGE_RECEIVED), `title`, `referenceId`, `createdAt`, `readAt`.
-- **Manejadores de eventos** (`application/internal/eventhandlers`, con `@EventListener`):
-  crean notificaciones a partir de los eventos de `connections` y `meetups`.
+  CONNECTION_ACCEPTED, PARTICIPATION_REQUESTED, PARTICIPATION_CONFIRMED, PARTICIPATION_INVITED,
+  INVITATION_ACCEPTED, INVITATION_DECLINED, MEETUP_CANCELLED, MESSAGE_RECEIVED), `title`,
+  `referenceId`, `createdAt`, `readAt`.
+- **Manejadores de eventos** (`@EventListener`): crean notificaciones a partir de los eventos
+  de `connections` y `meetups`. Los campos de los eventos de `meetups` y a quién se notifica cada
+  uno están en 8.4 (tabla de eventos); `meetupId` es el `referenceId`. Crear un meetup **no**
+  notifica a nadie: solo se avisa a quien se invita, a quien se acepta y al organizador.
 - **Reglas:** solo se escriben mensajes entre estudiantes **conectados y no bloqueados**; solo
   el destinatario marca como leído.
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/messages` | Enviar mensaje |
-| GET | `/messages/conversations/{otherStudentId}` | Conversación con otro estudiante |
+| GET | `/messages/conversations/{otherStudentId}` | Conversación con otro estudiante (historial) |
 | PATCH | `/messages/{id}/read` | Marcar como leído |
 | GET | `/notifications` | Mis notificaciones |
 | PATCH | `/notifications/{id}/read` | Marcar como leída |
+
+**Tiempo real (D-17).** El chat entrega los mensajes al instante por WebSocket con STOMP; REST
+sigue siendo la vía para enviar, guardar y consultar el historial.
+
+- **Flujo:** `POST /messages` guarda el mensaje (regla del agregado `Message`), el handler
+  despacha `MessageSentEvent` y un manejador de ese evento lo **empuja** al destinatario con
+  `SimpMessagingTemplate`. El socket no contiene reglas de negocio.
+- **Conexión:** `/ws` (con `setAllowedOrigins` para el frontend). Cada estudiante se suscribe a
+  `/user/queue/messages`; las notificaciones llegan por `/user/queue/notifications`.
+- **Identidad provisional:** `studentId` como parámetro de la conexión, igual que el header
+  `X-Student-Id` de REST (D-16); con JWT sale del token.
+- **Dependencia:** `spring-boot-starter-websocket`; la agrega André en `pom.xml`, no cada
+  integrante.
+- **Orden de trabajo:** dominio, persistencia y REST de `messaging` primero (el evento
+  `MessageSentEvent` se declara desde el dominio); el push por WebSocket se monta sobre ese
+  evento y no cambia el dominio ni la persistencia.
+- **Pruebas:** el manejador del evento se prueba con JUnit y un `SimpMessagingTemplate` simulado.
+  Swagger no documenta WebSockets; el contrato queda en esta sección.
 
 ### 8.7 `moderation` — Ubes
 
@@ -910,3 +1000,4 @@ ejecuta cuando el curso llegue a despliegue o el profesor lo pida. Responsable: 
 |---|---|---|---|
 | 2026-10-08 | André · Claude Code | Versión inicial: molde, capas, contextos, endpoints, base de datos | Inicio del desarrollo para el APF2 |
 | 2026-10-11 | André · Claude Code | Pasa de `backend/AGENTS.md` a `docs/guia-backend.md` con rutas en la raíz; header `X-Student-Id`; controller con repositorio mientras no exista la capa de aplicación; tests H2 por adapter; alcance por agregado; `iam` del repo como ejemplo | Repos separados (D-15), indicaciones del profesor del 8 y 11-oct, límite de 32 KB de Codex |
+| 2026-10-19 | André · Claude Code | Árbol de la sección 3 y regla «Entre contextos» alineados con la capa de aplicación CQRS (`application/commands`, `queries`, `dtos`, `assemblers`, `handlers`); se quitó `application/internal` y `domain/commands`/`queries` | La sección 4 ya describía CQRS pero el árbol conservaba la estructura anterior; lo detectó el agente de Fernando |
