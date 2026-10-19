@@ -4,12 +4,12 @@ Solo Ubes edita este archivo, en el último commit de cada PR.
 
 | Bloque | Estado | PR | Notas |
 |---|---|---|---|
-| Dominio y tests | 🔨 | | Report, Block y sus pruebas incluidos en este bloque |
-| Contrato de repositorio | 🔨 | | Repositorios de dominio y fachada incluidos en este bloque |
-| Persistencia y test H2 | ⏳ | | Espera B2 |
-| Capa de aplicación | ⏳ | | |
-| Resources y endpoints | 🔨 | | Resources, assemblers y colección Postman incluidos; controllers y endpoints pendientes |
+| Dominio y tests | ✅ | #7 | Report, Block y sus pruebas fusionados |
+| Contrato de repositorio | ✅ | #7 | Repositorios de dominio y fachada fusionados |
+| Persistencia y test H2 | 🔨 | #15 | Adapters probados con H2; PR abierto |
+| Capa de aplicación | 🔨 | #15 | Handlers CQRS y pruebas unitarias; PR abierto |
+| Resources y endpoints | 🔨 | #15 | Controllers conectados a handlers, pruebas HTTP y Postman; PR abierto |
 
-**Siguiente paso:** abrir el PR de moderation hacia `main`; después, continuar con connections en su rama independiente.
+**Siguiente paso:** esperar la revisión y fusión del PR #15; después, continuar con el bloque independiente de `connections`.
 
-**Última actualización:** 2026-10-16 · Ubes
+**Última actualización:** 2026-10-19 · Ubes
