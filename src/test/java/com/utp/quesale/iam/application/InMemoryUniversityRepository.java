@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 // Repositorio en memoria para probar los handlers sin base de datos
-class InMemoryUniversityRepository implements UniversityRepository {
+public class InMemoryUniversityRepository implements UniversityRepository {
 
     private final Map<Long, University> store = new LinkedHashMap<>();
     private long nextId = 1;
