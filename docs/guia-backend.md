@@ -328,10 +328,10 @@ Cada carpeta se crea **cuando se implementa** algo que va en ella; no se crean c
 
 ### `application` — CQRS del profesor (clase del 15-oct)
 
-> **No la escribas hasta que B5 esté en `main`** (ver `docs/seguimiento/README.md`). `iam` será
-> el modelo; así todos los módulos quedan iguales. Hasta entonces, el controller usa la interfaz
-> del repositorio (sección 1.4). Esta sección reemplaza la idea anterior de `XCommandService` y
-> `application/internal`, que ya **no se usa**.
+> **`iam` es el modelo** (B5): copia su estructura en `src/main/java/com/utp/quesale/iam/application/`
+> y sus pruebas, sin inventar otra. Primero termina el dominio y la persistencia con test H2 de tu
+> módulo; después escribes su capa de aplicación. Esta sección reemplaza la idea anterior de
+> `XCommandService` y `application/internal`, que ya **no se usa**.
 
 Estructura, tomada del código `learning-platform-semana9-corregido` del profesor:
 
