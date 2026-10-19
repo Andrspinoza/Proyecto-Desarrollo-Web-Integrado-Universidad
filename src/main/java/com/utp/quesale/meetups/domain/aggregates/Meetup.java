@@ -8,10 +8,10 @@ import com.utp.quesale.meetups.domain.events.MeetupCreatedEvent;
 import com.utp.quesale.meetups.domain.events.ParticipationConfirmedEvent;
 import com.utp.quesale.meetups.domain.events.ParticipationInvitedEvent;
 import com.utp.quesale.meetups.domain.events.ParticipationRequestedEvent;
-import com.utp.quesale.meetups.domain.enums.MeetupStatus;
-import com.utp.quesale.meetups.domain.enums.MeetupType;
-import com.utp.quesale.meetups.domain.enums.MeetupVisibility;
-import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupStatus;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupType;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupVisibility;
+import com.utp.quesale.meetups.domain.valueobjects.ParticipationStatus;
 import com.utp.quesale.meetups.domain.exceptions.MeetupAccessDeniedException;
 import com.utp.quesale.meetups.domain.exceptions.ParticipationNotFoundException;
 import com.utp.quesale.meetups.domain.valueobjects.Capacity;
@@ -344,13 +344,6 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
         return id;
     }
 
-    public void assignId(Long id) {
-        if (id == null || id <= 0)
-            throw new IllegalArgumentException("Meetup ID must be positive");
-        if (this.id != null && !this.id.equals(id))
-            throw new IllegalStateException("Meetup ID is already assigned");
-        this.id = id;
-    }
     public Long getOrganizerId() {
         return organizerId;
     }

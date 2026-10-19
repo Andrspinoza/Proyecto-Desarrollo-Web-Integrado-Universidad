@@ -1,4 +1,4 @@
-package com.utp.quesale.meetups.domain.enums;
+package com.utp.quesale.meetups.domain.valueobjects;
 
 public enum ParticipationStatus {
     REQUESTED,

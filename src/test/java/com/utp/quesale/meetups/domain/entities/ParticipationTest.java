@@ -1,6 +1,6 @@
 package com.utp.quesale.meetups.domain.entities;
 
-import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
+import com.utp.quesale.meetups.domain.valueobjects.ParticipationStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

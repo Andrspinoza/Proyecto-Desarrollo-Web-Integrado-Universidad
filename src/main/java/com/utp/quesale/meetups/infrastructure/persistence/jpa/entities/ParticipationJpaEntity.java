@@ -1,6 +1,6 @@
 package com.utp.quesale.meetups.infrastructure.persistence.jpa.entities;
 
-import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
+import com.utp.quesale.meetups.domain.valueobjects.ParticipationStatus;
 import com.utp.quesale.profiles.infrastructure.persistence.jpa.entities.StudentJpaEntity;
 import jakarta.persistence.*;
 import lombok.Getter;

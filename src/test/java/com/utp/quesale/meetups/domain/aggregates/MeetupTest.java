@@ -8,10 +8,10 @@ import com.utp.quesale.meetups.domain.events.MeetupCreatedEvent;
 import com.utp.quesale.meetups.domain.events.ParticipationConfirmedEvent;
 import com.utp.quesale.meetups.domain.events.ParticipationInvitedEvent;
 import com.utp.quesale.meetups.domain.events.ParticipationRequestedEvent;
-import com.utp.quesale.meetups.domain.enums.MeetupStatus;
-import com.utp.quesale.meetups.domain.enums.MeetupType;
-import com.utp.quesale.meetups.domain.enums.MeetupVisibility;
-import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupStatus;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupType;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupVisibility;
+import com.utp.quesale.meetups.domain.valueobjects.ParticipationStatus;
 import com.utp.quesale.meetups.domain.exceptions.MeetupAccessDeniedException;
 import com.utp.quesale.meetups.domain.exceptions.ParticipationNotFoundException;
 import com.utp.quesale.meetups.domain.valueobjects.Capacity;
@@ -393,18 +393,7 @@ class MeetupTest {
         assertEquals(ORGANIZER_ID, organizerId);
         assertEquals(expectedStudentId, studentId);
     }
-    @Test
-    @DisplayName("El id generado se asigna sin perder los eventos del agregado")
-    void assignsPersistenceIdWithoutLosingDomainEvents() {
-        Meetup meetup = createMeetup(3);
 
-        meetup.assignId(42L);
-
-        assertEquals(42L, meetup.getId());
-        assertEquals(1, meetup.pullDomainEvents().size());
-        assertThrows(IllegalStateException.class, () -> meetup.assignId(43L));
-        assertThrows(IllegalArgumentException.class, () -> createMeetup(3).assignId(0L));
-    }
     private Meetup createMeetup(int capacity) {
         return createMeetup(capacity, MeetupVisibility.PUBLIC);
     }

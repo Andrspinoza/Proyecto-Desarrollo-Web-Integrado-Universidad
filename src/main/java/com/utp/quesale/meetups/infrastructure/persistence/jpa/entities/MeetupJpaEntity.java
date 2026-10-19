@@ -1,9 +1,9 @@
 package com.utp.quesale.meetups.infrastructure.persistence.jpa.entities;
 
 import com.utp.quesale.iam.infrastructure.persistence.jpa.entities.UniversityJpaEntity;
-import com.utp.quesale.meetups.domain.enums.MeetupStatus;
-import com.utp.quesale.meetups.domain.enums.MeetupType;
-import com.utp.quesale.meetups.domain.enums.MeetupVisibility;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupStatus;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupType;
+import com.utp.quesale.meetups.domain.valueobjects.MeetupVisibility;
 import com.utp.quesale.profiles.infrastructure.persistence.jpa.entities.StudentJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

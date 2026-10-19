@@ -38,9 +38,7 @@ public class MeetupRepositoryAdapter implements MeetupRepository {
                 entityManager.getReference(UniversityJpaEntity.class, meetup.getUniversityId()),
                 studentId -> entityManager.getReference(StudentJpaEntity.class, studentId));
         MeetupJpaEntity savedEntity = repository.save(entity);
-        if (meetup.getId() == null)
-            meetup.assignId(savedEntity.getId());
-        return meetup;
+        return mapper.toDomain(savedEntity);
     }
 
     @Override

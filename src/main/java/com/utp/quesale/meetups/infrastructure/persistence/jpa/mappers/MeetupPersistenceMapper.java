@@ -19,6 +19,7 @@ public class MeetupPersistenceMapper {
     public Meetup toDomain(MeetupJpaEntity entity) {
         List<Participation> participations = entity.getParticipations().stream()
                 .map(participation -> new Participation(
+                        participation.getId(),
                         participation.getStudent().getId(),
                         participation.getStatus(),
                         participation.getRegisteredAt()))
@@ -70,6 +71,7 @@ public class MeetupPersistenceMapper {
             Participation participation,
             Function<Long, StudentJpaEntity> studentReference) {
         ParticipationJpaEntity entity = new ParticipationJpaEntity();
+        entity.setId(participation.getId());
         entity.setStudent(studentReference.apply(participation.getStudentId()));
         entity.setStatus(participation.getStatus());
         entity.setRegisteredAt(participation.getRegisteredAt());

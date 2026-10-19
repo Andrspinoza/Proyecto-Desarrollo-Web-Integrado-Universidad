@@ -1,11 +1,12 @@
 package com.utp.quesale.meetups.domain.entities;
 
-import com.utp.quesale.meetups.domain.enums.ParticipationStatus;
+import com.utp.quesale.meetups.domain.valueobjects.ParticipationStatus;
 
 import java.time.Instant;
 
 public class Participation {
 
+    private final Long id;
     private final Long studentId;
     private ParticipationStatus status;
     private final Instant registeredAt;
@@ -15,6 +16,13 @@ public class Participation {
     }
 
     public Participation(Long studentId, ParticipationStatus status, Instant registeredAt) {
+        this(null, studentId, status, registeredAt);
+    }
+
+    // Constructor de rehidratación: conserva el id de la fila de participación.
+    public Participation(Long id, Long studentId, ParticipationStatus status, Instant registeredAt) {
+        if (id != null && id <= 0)
+            throw new IllegalArgumentException("Participation ID must be positive");
         if (studentId == null || studentId <= 0)
             throw new IllegalArgumentException("Student ID must be positive");
         if (status == null)
@@ -22,6 +30,7 @@ public class Participation {
         if (registeredAt == null)
             throw new IllegalArgumentException("Registration date is required");
 
+        this.id = id;
         this.studentId = studentId;
         this.status = status;
         this.registeredAt = registeredAt;
@@ -53,6 +62,10 @@ public class Participation {
 
     public Long getStudentId() {
         return studentId;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public ParticipationStatus getStatus() {
