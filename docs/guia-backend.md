@@ -278,14 +278,17 @@ com.utp.quesale
     │   ├── events/               records de eventos
     │   ├── exceptions/           una por caso
     │   ├── repositories/         interfaces (contratos)
-    │   ├── services/             servicios de dominio y contratos de servicios de aplicación
-    │   ├── commands/             records
-    │   └── queries/              records
-    ├── application/
-    │   ├── internal/commandservices/   implementaciones de XCommandService
-    │   ├── internal/queryservices/     implementaciones de XQueryService
-    │   ├── internal/eventhandlers/     manejadores de eventos
-    │   └── acl/                        implementación de la fachada del contexto
+    │   └── services/             servicios de dominio (reglas que no pertenecen a una entidad)
+    ├── application/              CQRS del profesor (ver sección 4); el modelo es `iam`
+    │   ├── commands/             un record por operación que modifica
+    │   ├── queries/              un record por consulta
+    │   ├── dtos/                 resultado que devuelven los handlers
+    │   ├── assemblers/           del agregado al DTO, sin depender de HTTP
+    │   ├── handlers/
+    │   │   ├── commands/         un @Service por agregado, con un handle(...) por command
+    │   │   └── queries/          un @Service por query
+    │   ├── eventhandlers/        reaccionan a eventos de otros contextos (@EventListener)
+    │   └── acl/                  implementación de la fachada del contexto
     ├── infrastructure/persistence/jpa/{entities,repositories,mappers,adapters}
     └── interfaces/
         ├── controllers/
@@ -376,7 +379,8 @@ application/
 Un contexto **nunca importa el dominio de otro**. Solo puede usar:
 
 1. La **fachada** del otro contexto (`interfaces/acl`), con tipos primitivos (sección 6).
-2. Sus **eventos** (`domain/events`), que son su lenguaje publicado, solo en `eventhandlers`.
+2. Sus **eventos** (`domain/events`), que son su lenguaje publicado, solo en
+   `application/eventhandlers`.
 3. Sus **entidades JPA**, solo desde `infrastructure` y solo para FKs (D-05).
 
 ---
@@ -992,3 +996,4 @@ ejecuta cuando el curso llegue a despliegue o el profesor lo pida. Responsable: 
 |---|---|---|---|
 | 2026-10-08 | André · Claude Code | Versión inicial: molde, capas, contextos, endpoints, base de datos | Inicio del desarrollo para el APF2 |
 | 2026-10-11 | André · Claude Code | Pasa de `backend/AGENTS.md` a `docs/guia-backend.md` con rutas en la raíz; header `X-Student-Id`; controller con repositorio mientras no exista la capa de aplicación; tests H2 por adapter; alcance por agregado; `iam` del repo como ejemplo | Repos separados (D-15), indicaciones del profesor del 8 y 11-oct, límite de 32 KB de Codex |
+| 2026-10-19 | André · Claude Code | Árbol de la sección 3 y regla «Entre contextos» alineados con la capa de aplicación CQRS (`application/commands`, `queries`, `dtos`, `assemblers`, `handlers`); se quitó `application/internal` y `domain/commands`/`queries` | La sección 4 ya describía CQRS pero el árbol conservaba la estructura anterior; lo detectó el agente de Fernando |
