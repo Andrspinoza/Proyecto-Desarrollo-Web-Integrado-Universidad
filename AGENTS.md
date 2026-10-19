@@ -108,9 +108,9 @@ commits progresivos. El profesor revisa quién contribuyó y qué puede explicar
 `src/test/java/com/utp/quesale/iam/`.
 
 **¿Y la capa de aplicación?** El profesor la enseñó el 15-oct con CQRS (guía, sección 4,
-`application`). **Se escribe cuando B5 esté en `main`**, porque `iam` será el modelo. Hasta entonces
-el controller usa la interfaz del repositorio de dominio (guía 1.4). Se agrega sin tocar el
-dominio ni la persistencia.
+`application`). **`iam` es el modelo (B5, ya en `main`)**: cuando tu módulo termine dominio y
+persistencia con test H2, escribes su capa de aplicación copiando `iam`, y el controller pasa a
+usar los handlers. Se agrega sin tocar el dominio ni la persistencia.
 
 **¿Cómo sé quién hace la petición si no hay login?** Header `X-Student-Id` con el id del
 estudiante (D-16). JWT llegará cuando el profesor lo enseñe.
@@ -143,7 +143,7 @@ Estados: ✅ decidida · 🟡 propuesta, se puede cambiar · ❓ pendiente · �
 |---|---|---|---|
 | D-01 | ✅ | Spring Boot **4.1.1**, Java 21, Maven, Jar, Properties | Igual al molde del profesor |
 | D-02 | ✅ | **Sin Lombok en `domain` ni en `application`**; solo en entidades JPA | Indicación del profesor: el dominio no depende de librerías externas |
-| D-03 | ✅ | Capa `application` con **CQRS** como la enseñó el profesor el 15-oct (guía, sección 4). Se escribe cuando B5 esté en `main`; mientras, el controller usa el repositorio de dominio | Indicación del profesor del 11 y 15-oct |
+| D-03 | ✅ | Capa `application` con **CQRS** como la enseñó el profesor el 15-oct (guía, sección 4). `iam` es el modelo (B5): cada módulo la copia cuando termine su persistencia | Indicación del profesor del 11 y 15-oct |
 | D-04 | ⛔ | ~~Identidad por header `X-Account-Id`~~ — reemplazada por D-16 | `Account` aún no existe |
 | D-05 | ✅ | Entre contextos, FKs reales en MySQL vía `@ManyToOne` en las entidades JPA; el dominio usa `Long` | Sin FKs, el EER Diagram de Workbench sale sin relaciones |
 | D-06 | ✅ | **Swagger** (springdoc) como tecnología nueva propuesta; pruebas también en Postman y Thunder Client | Documenta y prueba la API en el navegador |
@@ -460,5 +460,6 @@ Se llena después de cada revisión. Cada observación genera una tarea o un cam
 | 2026-10-11 | André · Claude Code | B0 y B1 marcadas como entregadas en la tabla de estado; Fernando puede empezar B2 | PR #2 fusionado; B1 en el PR siguiente |
 | 2026-10-15 | André · Claude Code | Indicaciones del profesor del 15-oct en la sección 13: CQRS, varios contextos delimitados, Swagger y criterio de evaluación | Clase y conversación con el profesor del 15-oct |
 | 2026-10-15 | André · Claude Code | D-17: chat en tiempo real por WebSocket (STOMP) y su contrato en la guía, 8.6 | El diseño de `messaging` solo contemplaba REST; un chat debe entregar al instante |
+| 2026-10-19 | André · Claude Code | B5 entregada: capa de aplicación de `iam` como modelo; D-03 y la pregunta frecuente de la capa de aplicación actualizadas; panel y guía (sección 4) apuntan a `iam` | La capa de aplicación de cada módulo se copia de `iam` |
 | 2026-10-16 | André · Claude Code | Sección 2 sin tablas de estado: el estado vive solo en `docs/seguimiento/README.md`; D-03 decidida con la estructura CQRS; piezas B5 a B7 | Evitar dos fuentes de estado que se contradigan; PR #4, #5 y #7 fusionados |
 | 2026-10-15 | André · Claude Code | Reglas para partir el trabajo en PR («Punto de PR») y archivos `docs/seguimiento/<modulo>.md` | Los agentes no sabían dónde cortar un PR y el avance solo constaba en commits y PR, ilegibles sin `gh` |
