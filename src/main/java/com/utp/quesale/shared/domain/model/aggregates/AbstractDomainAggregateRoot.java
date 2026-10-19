@@ -1,32 +1,22 @@
 package com.utp.quesale.shared.domain.model.aggregates;
 
-import org.springframework.data.domain.AbstractAggregateRoot;
-
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public abstract class AbstractDomainAggregateRoot
-        <T extends AbstractDomainAggregateRoot<T>> extends
-        AbstractAggregateRoot<T> {
+// Raíz de agregado de dominio puro: sin JPA, Spring Data ni APIs de eventos de Spring
+public abstract class AbstractDomainAggregateRoot<T extends AbstractDomainAggregateRoot<T>> {
 
-    protected void registerDomainEvent(Object event) {
-        super.registerEvent(event);
+    private final List<Object> pendingEvents = new ArrayList<>();
+
+    protected final void registerDomainEvent(Object event) {
+        pendingEvents.add(Objects.requireNonNull(event, "event"));
     }
 
-    @Override
-    protected Collection<Object> domainEvents() {
-        return super.domainEvents();
-    }
-
-    @Override
-    protected void clearDomainEvents() {
-        super.clearDomainEvents();
-    }
-
-    // Agregado por el equipo: la capa de aplicación publicará estos eventos después de guardar
-    public List<Object> pullDomainEvents() {
-        List<Object> events = List.copyOf(domainEvents());
-        clearDomainEvents();
+    // La capa de aplicación entrega estos eventos al despachador después de guardar
+    public final List<Object> pullDomainEvents() {
+        List<Object> events = List.copyOf(pendingEvents);
+        pendingEvents.clear();
         return events;
     }
 }
