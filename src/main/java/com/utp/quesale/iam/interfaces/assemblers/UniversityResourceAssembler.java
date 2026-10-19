@@ -1,17 +1,23 @@
 package com.utp.quesale.iam.interfaces.assemblers;
 
-import com.utp.quesale.iam.domain.aggregates.University;
+import com.utp.quesale.iam.application.commands.CreateUniversityCommand;
+import com.utp.quesale.iam.application.dtos.UniversityDto;
+import com.utp.quesale.iam.interfaces.resources.CreateUniversityResource;
 import com.utp.quesale.iam.interfaces.resources.UniversityResource;
 
 public class UniversityResourceAssembler {
 
-    public static UniversityResource toResourceFromEntity(University university) {
+    public static CreateUniversityCommand toCommandFromResource(CreateUniversityResource resource) {
+        return new CreateUniversityCommand(resource.name(), resource.emailDomain());
+    }
+
+    public static UniversityResource toResourceFromDto(UniversityDto dto) {
         return new UniversityResource(
-                university.getId(),
-                university.getName(),
-                university.getEmailDomain().value(),
-                university.isActive(),
-                university.getCreatedAt()
+                dto.id(),
+                dto.name(),
+                dto.emailDomain(),
+                dto.active(),
+                dto.createdAt()
         );
     }
 }
