@@ -1,5 +1,9 @@
 package com.utp.quesale.profiles.domain.aggregates;
 
+import com.utp.quesale.profiles.domain.entities.Profile;
+import com.utp.quesale.profiles.domain.valueobjects.Career;
+import com.utp.quesale.profiles.domain.valueobjects.StudyCycle;
+import com.utp.quesale.profiles.domain.valueobjects.Visibility;
 import com.utp.quesale.profiles.domain.valueobjects.FullName;
 import com.utp.quesale.profiles.domain.valueobjects.StudentRecordId;
 import com.utp.quesale.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
@@ -14,6 +18,7 @@ public class Student extends AbstractDomainAggregateRoot<Student> {
     private final String email;
     private final FullName fullName;
     private final Instant createdAt;
+    private Profile profile;
 
     public Student(Long universityId, String email, FullName fullName) {
         this(null, new StudentRecordId(), universityId, email, fullName, Instant.now());
@@ -22,6 +27,11 @@ public class Student extends AbstractDomainAggregateRoot<Student> {
     // El mapper recupera la identidad y fecha originales sin generar eventos.
     public Student(Long id, StudentRecordId recordId, Long universityId,
                    String email, FullName fullName, Instant createdAt) {
+        this(id, recordId, universityId, email, fullName, createdAt, null);
+    }
+
+    public Student(Long id, StudentRecordId recordId, Long universityId,
+                   String email, FullName fullName, Instant createdAt, Profile profile) {
         if (recordId == null) throw new IllegalArgumentException("Student record id is required");
         if (universityId == null || universityId <= 0)
             throw new IllegalArgumentException("University id must be positive");
@@ -33,6 +43,32 @@ public class Student extends AbstractDomainAggregateRoot<Student> {
         this.email = validEmail(email);
         this.fullName = fullName;
         this.createdAt = createdAt;
+        this.profile = profile;
+    }
+
+    public void createProfile(Career career, StudyCycle cycle, String description, Visibility visibility) {
+        if (profile != null) throw new IllegalStateException("Student already has a profile");
+        profile = new Profile(career, cycle, description, visibility);
+    }
+
+    public void updateProfile(Career career, StudyCycle cycle, String description, Visibility visibility) {
+        requireProfile().update(career, cycle, description, visibility);
+    }
+
+    public void addInterest(Long interestId) { requireProfile().addInterest(interestId); }
+    public void removeInterest(Long interestId) { requireProfile().removeInterest(interestId); }
+    public void addSkill(Long skillId) { requireProfile().addSkill(skillId); }
+    public void removeSkill(Long skillId) { requireProfile().removeSkill(skillId); }
+
+    public boolean isVisibleTo(Long viewerStudentId, boolean connected) {
+        if (profile == null) return false;
+        return profile.getVisibility() == Visibility.PUBLIC
+                || (id != null && id.equals(viewerStudentId)) || connected;
+    }
+
+    private Profile requireProfile() {
+        if (profile == null) throw new IllegalStateException("Student has no profile");
+        return profile;
     }
 
     private static String validEmail(String value) {
@@ -49,4 +85,5 @@ public class Student extends AbstractDomainAggregateRoot<Student> {
     public String getEmail() { return email; }
     public FullName getFullName() { return fullName; }
     public Instant getCreatedAt() { return createdAt; }
+    public Profile getProfile() { return profile; }
 }
