@@ -470,6 +470,10 @@ enseñe Spring Security + JWT, el `studentId` saldrá del token y este header de
 dominio no cambia. Las operaciones de administrador se agregan con `iam` completo
 (`IamContextFacade.isAdmin`).
 
+**Endpoints de administrador (por ejemplo, revisar o descartar un reporte).** Hasta tener `Account`
+y JWT, el valor de `X-Student-Id` se usa como `adminAccountId` y **no se valida el rol**. Dilo en
+Swagger y en Postman como provisional. Con JWT, el id sale del token y se valida el rol.
+
 ### 6.3 Fachadas — firmas fijas (contrato primero)
 
 Cada dueño publica la **interfaz** apenas termina su dominio (B3), aunque la implementación
