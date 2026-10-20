@@ -4,7 +4,7 @@ Solo Mafer edita este archivo, en el último commit de cada PR.
 
 | Bloque | Estado | PR | Notas |
 |---|---|---|---|
-| Dominio y tests | 🔨 | este PR | B6: `Message` mínimo y `MessageSentEvent`; faltan `Notification` y `markAsRead` |
+| Dominio y tests | 🔨 | #23 | B6: `Message` mínimo y `MessageSentEvent`; faltan `Notification` y `markAsRead` |
 | Contrato de repositorio | ⏳ | | |
 | Persistencia y test H2 | ⏳ | | |
 | Capa de aplicación | ⏳ | | Espera las fachadas de Ubes y B4 |
