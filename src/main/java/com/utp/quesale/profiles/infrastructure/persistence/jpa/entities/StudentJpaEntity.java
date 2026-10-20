@@ -41,4 +41,16 @@ public class StudentJpaEntity {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @OneToOne(mappedBy = "student", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, orphanRemoval = true)
+    private ProfileJpaEntity profile;
+
+    // Mantiene ambos lados de la relación; el perfil contiene la FK a students.
+    public void setProfile(ProfileJpaEntity profile) {
+        if (this.profile == profile) return;
+        if (this.profile != null) this.profile.setStudent(null);
+        this.profile = profile;
+        if (profile != null) profile.setStudent(this);
+    }
 }
