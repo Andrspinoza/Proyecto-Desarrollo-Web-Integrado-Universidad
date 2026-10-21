@@ -7,12 +7,17 @@ import com.utp.quesale.communities.application.handlers.commands.CommunityComman
 import com.utp.quesale.communities.application.handlers.queries.GetCommunityQueryHandler;
 import com.utp.quesale.communities.application.handlers.queries.ListCommunitiesQueryHandler;
 import com.utp.quesale.communities.application.handlers.queries.ListMembersQueryHandler;
+import com.utp.quesale.communities.application.handlers.queries.ListPostsQueryHandler;
 import com.utp.quesale.communities.application.queries.GetCommunityQuery;
 import com.utp.quesale.communities.application.queries.ListCommunitiesQuery;
 import com.utp.quesale.communities.application.queries.ListMembersQuery;
+import com.utp.quesale.communities.application.queries.ListPostsQuery;
+import com.utp.quesale.communities.interfaces.assemblers.CommunityPostResourceAssembler;
 import com.utp.quesale.communities.interfaces.assemblers.CommunityResourceAssembler;
 import com.utp.quesale.communities.interfaces.assemblers.MembershipResourceAssembler;
+import com.utp.quesale.communities.interfaces.resources.CommunityPostResource;
 import com.utp.quesale.communities.interfaces.resources.CommunityResource;
+import com.utp.quesale.communities.interfaces.resources.CreateCommunityPostResource;
 import com.utp.quesale.communities.interfaces.resources.CreateCommunityResource;
 import com.utp.quesale.communities.interfaces.resources.MembershipResource;
 import com.utp.quesale.communities.interfaces.resources.UpdateCommunityResource;
@@ -35,13 +40,16 @@ public class CommunitiesController {
     private final GetCommunityQueryHandler getHandler;
     private final ListCommunitiesQueryHandler listHandler;
     private final ListMembersQueryHandler membersHandler;
+    private final ListPostsQueryHandler postsHandler;
 
     public CommunitiesController(CommunityCommandHandler commandHandler, GetCommunityQueryHandler getHandler,
-                                 ListCommunitiesQueryHandler listHandler, ListMembersQueryHandler membersHandler) {
+                                 ListCommunitiesQueryHandler listHandler, ListMembersQueryHandler membersHandler,
+                                 ListPostsQueryHandler postsHandler) {
         this.commandHandler = commandHandler;
         this.getHandler = getHandler;
         this.listHandler = listHandler;
         this.membersHandler = membersHandler;
+        this.postsHandler = postsHandler;
     }
 
     @PostMapping
@@ -117,5 +125,26 @@ public class CommunitiesController {
             @PathVariable Long memberId) {
         return CommunityResourceAssembler.toResourceFromDto(
                 commandHandler.handle(new PromoteMemberCommand(id, memberId, studentId)));
+    }
+
+    @PostMapping("/{id}/posts")
+    @Operation(summary = "Publicar en una comunidad (solo miembros)")
+    public ResponseEntity<CommunityPostResource> publish(
+            @RequestHeader(RequestHeaders.STUDENT_ID) Long studentId,
+            @PathVariable Long id,
+            @Valid @RequestBody CreateCommunityPostResource resource) {
+        var dto = commandHandler.handle(CommunityPostResourceAssembler.toPublishCommand(id, studentId, resource));
+        return ResponseEntity.created(URI.create("/api/v1/communities/" + id + "/posts"))
+                .body(CommunityPostResourceAssembler.toResourceFromDto(dto));
+    }
+
+    @GetMapping("/{id}/posts")
+    @Operation(summary = "Ver las publicaciones de una comunidad, las más recientes primero (solo miembros)")
+    public List<CommunityPostResource> findPosts(
+            @RequestHeader(RequestHeaders.STUDENT_ID) Long studentId,
+            @PathVariable Long id) {
+        return postsHandler.handle(new ListPostsQuery(id, studentId)).stream()
+                .map(CommunityPostResourceAssembler::toResourceFromDto)
+                .toList();
     }
 }
