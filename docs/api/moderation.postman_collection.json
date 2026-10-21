@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "fffe38e8-c8c8-4bee-84c6-cbc1ee3fbfd4",
     "name": "Que Sale - Moderation",
-    "description": "Pruebas para reportes y bloqueos. Configura studentId, blockedStudentId y reportId con estudiantes y recursos existentes. Las operaciones administrativas usan adminStudentId como marcador: confirma el contrato de identidad del controller antes de ejecutarlas, ya que el dominio recibe adminAccountId pero el header provisional documentado es X-Student-Id.",
+    "description": "Pruebas para reportes y bloqueos. Configura studentId, blockedStudentId y reportId con estudiantes y recursos existentes. En los endpoints administrativos, X-Student-Id se usa provisionalmente como adminAccountId y no se valida el rol; JWT y autorización de administrador quedan pendientes.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -166,7 +166,7 @@
             "reports"
           ]
         },
-        "description": "Administrative endpoint. Confirm how the controller resolves the admin account from X-Student-Id before use. Expected: 200 OK."
+        "description": "Administrative endpoint (provisional): X-Student-Id is passed as adminAccountId; the role is not validated. Expected: 200 OK."
       },
       "event": [
         {
@@ -210,7 +210,7 @@
             }
           ]
         },
-        "description": "Administrative endpoint. Expected: 200 OK with only OPEN reports."
+        "description": "Administrative endpoint (provisional): X-Student-Id is passed as adminAccountId; the role is not validated. Expected: 200 OK with only OPEN reports."
       },
       "event": [
         {
@@ -252,7 +252,7 @@
             "{{reportId}}"
           ]
         },
-        "description": "Administrative endpoint. Expected: 200 OK for an existing report; 404 for a missing report."
+        "description": "Administrative endpoint (provisional): X-Student-Id is passed as adminAccountId; the role is not validated. Expected: 200 OK for an existing report; 404 for a missing report."
       },
       "event": [
         {
@@ -305,7 +305,7 @@
             "review"
           ]
         },
-        "description": "Administrative endpoint. Use a different OPEN report from the dismiss request. Expected: 200 OK and REVIEWED status. Confirm admin identity resolution before use."
+        "description": "Administrative endpoint (provisional): X-Student-Id is passed as adminAccountId; the role is not validated. Use a different OPEN report from the dismiss request. Expected: 200 OK and REVIEWED status."
       },
       "event": [
         {
@@ -358,7 +358,7 @@
             "dismiss"
           ]
         },
-        "description": "Administrative endpoint. Use a different OPEN report from the review request. Expected: 200 OK and DISMISSED status. Confirm admin identity resolution before use."
+        "description": "Administrative endpoint (provisional): X-Student-Id is passed as adminAccountId; the role is not validated. Use a different OPEN report from the review request. Expected: 200 OK and DISMISSED status."
       },
       "event": [
         {
