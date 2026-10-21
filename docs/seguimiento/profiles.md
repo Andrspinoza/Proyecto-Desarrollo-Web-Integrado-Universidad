@@ -14,10 +14,10 @@ Solo Fernando edita este archivo, en el último commit de cada PR.
 | Contrato de fachada de profiles (B3) | ✅ En main | #19 | ProfilesContextFacade en interfaces/acl, con las tres firmas de la guía 6.3 |
 | Implementación provisional de fachada | ✅ En main | PR #21 | Bean ProfilesContextFacadeImpl y cinco pruebas; consulta estudiantes y universidades. studentIdOfAccount devuelve vacío hasta que existan Account y su vínculo con Student |
 | Afinidad y tests | ⏳ | | AffinityCalculator y AffinityScore pendientes |
-| Capa de aplicación de catálogos | Listo para revisión | Por abrir | Commands de creación, queries de listado, DTOs, assembler y handlers de Interest y Skill; catorce pruebas unitarias de aplicación |
+| Capa de aplicación de catálogos | En revisión | PR #24 | Commands de creación, queries de listado, DTOs, assembler y handlers de Interest y Skill; catorce pruebas unitarias de aplicación |
 | Capa de aplicación de Student y Profile | ⏳ | | Commands, queries, DTOs, assembler y handlers con sus pruebas |
 | Resources y endpoints | ⏳ | | |
 
-**Siguiente paso:** abrir el PR de la capa de aplicación de catálogos y registrar aquí su número cuando esté disponible. Después de su fusión y de incorporar main, continuar con la capa de aplicación de Student y Profile siguiendo iam (B5); luego, resources y endpoints. La resolución por cuenta requiere Account y su vínculo real con Student; no se equiparan sus IDs. La afinidad sigue pendiente como bloque independiente.
+**Siguiente paso:** cerrar la revisión del PR #24 de la capa de aplicación de catálogos. Después de su fusión y de incorporar main, continuar con la capa de aplicación de Student y Profile siguiendo iam (B5); luego, resources y endpoints. La resolución por cuenta requiere Account y su vínculo real con Student; no se equiparan sus IDs. La afinidad sigue pendiente como bloque independiente.
 
 **Última actualización:** 2026-10-20 · Fernando
