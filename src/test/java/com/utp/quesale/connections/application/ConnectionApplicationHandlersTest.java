@@ -139,6 +139,9 @@ class ConnectionApplicationHandlersTest {
                 new ListConnectionsQuery(REQUESTER_ID, ConnectionStatus.PENDING)).size());
         assertTrue(listHandler.handle(
                 new ListConnectionsQuery(REQUESTER_ID, ConnectionStatus.ACCEPTED)).isEmpty());
+        assertEquals(2, listHandler.handleSent(REQUESTER_ID).size());
+        assertEquals(0, listHandler.handleReceived(REQUESTER_ID).size());
+        assertEquals(1, listHandler.handleReceived(RECIPIENT_ID).size());
     }
 
     private static class TestProfilesFacade implements ProfilesContextFacade {

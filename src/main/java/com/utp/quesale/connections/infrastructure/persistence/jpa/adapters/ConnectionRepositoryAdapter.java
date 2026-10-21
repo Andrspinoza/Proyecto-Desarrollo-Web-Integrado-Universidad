@@ -70,6 +70,20 @@ public class ConnectionRepositoryAdapter implements ConnectionRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Connection> findAllReceivedByStudentId(Long studentId) {
+        return repository.findAllReceivedByStudentId(studentId, ConnectionStatus.PENDING).stream()
+                .map(mapper::toDomain).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Connection> findAllSentByStudentId(Long studentId) {
+        return repository.findAllSentByStudentId(studentId, ConnectionStatus.PENDING).stream()
+                .map(mapper::toDomain).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public boolean existsBetweenWithStatuses(Long studentId,
                                              Long otherStudentId,
                                              Set<ConnectionStatus> statuses) {

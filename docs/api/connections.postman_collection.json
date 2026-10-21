@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1e0a1a8-e183-4a58-9d85-0a444dcf0b7a",
     "name": "Que Sale - Connections",
-    "description": "Solicitudes Postman previstas para los endpoints de connections, que se expondrán en un bloque posterior. Este PR todavía no incluye controllers, así que las solicitudes no están listas para ejecutarse. Crear solicitudes también dependerá de las fachadas de perfiles y suscripciones.",
+    "description": "Pruebas Postman para los endpoints de conexiones. Configura baseUrl y los IDs de estudiantes existentes de la misma universidad. El studentId de cada petición se envía por X-Student-Id.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

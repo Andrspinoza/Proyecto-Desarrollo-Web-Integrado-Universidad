@@ -43,6 +43,9 @@ class ConnectionRepositoryAdapterTest {
         assertEquals(1, connectionRepository.findAllByStudentId(students.first()).size());
         assertEquals(1, connectionRepository.findAllByStudentId(students.second()).size());
         assertTrue(connectionRepository.findAllByStudentId(students.third()).isEmpty());
+        assertEquals(1, connectionRepository.findAllSentByStudentId(students.first()).size());
+        assertEquals(1, connectionRepository.findAllReceivedByStudentId(students.second()).size());
+        assertTrue(connectionRepository.findAllReceivedByStudentId(students.first()).isEmpty());
     }
 
     @Test
@@ -61,6 +64,8 @@ class ConnectionRepositoryAdapterTest {
                 .anyMatch(connection -> connection.getId().equals(saved.getId())));
         assertTrue(connectionRepository.findAllByStudentIdAndStatus(
                 students.first(), ConnectionStatus.PENDING).isEmpty());
+        assertTrue(connectionRepository.findAllReceivedByStudentId(students.second()).isEmpty());
+        assertTrue(connectionRepository.findAllSentByStudentId(students.first()).isEmpty());
     }
 
     @Test

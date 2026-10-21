@@ -54,6 +54,24 @@ class InMemoryConnectionRepository implements ConnectionRepository {
     }
 
     @Override
+    public List<Connection> findAllReceivedByStudentId(Long studentId) {
+        return connections.values().stream()
+                .filter(connection -> connection.getRecipientId().equals(studentId)
+                        && connection.getStatus() == ConnectionStatus.PENDING)
+                .map(connection -> copy(connection.getId(), connection))
+                .toList();
+    }
+
+    @Override
+    public List<Connection> findAllSentByStudentId(Long studentId) {
+        return connections.values().stream()
+                .filter(connection -> connection.getRequesterId().equals(studentId)
+                        && connection.getStatus() == ConnectionStatus.PENDING)
+                .map(connection -> copy(connection.getId(), connection))
+                .toList();
+    }
+
+    @Override
     public boolean existsBetweenWithStatuses(
             Long studentId, Long otherStudentId, Set<ConnectionStatus> statuses) {
         return connections.values().stream()

@@ -28,6 +28,22 @@ public interface ConnectionJpaRepository extends JpaRepository<ConnectionJpaEnti
                                                           @Param("status") ConnectionStatus status);
 
     @Query("""
+            select connection from ConnectionJpaEntity connection
+            where connection.recipient.id = :studentId and connection.status = :status
+            order by connection.createdAt desc
+            """)
+    List<ConnectionJpaEntity> findAllReceivedByStudentId(@Param("studentId") Long studentId,
+                                                         @Param("status") ConnectionStatus status);
+
+    @Query("""
+            select connection from ConnectionJpaEntity connection
+            where connection.requester.id = :studentId and connection.status = :status
+            order by connection.createdAt desc
+            """)
+    List<ConnectionJpaEntity> findAllSentByStudentId(@Param("studentId") Long studentId,
+                                                     @Param("status") ConnectionStatus status);
+
+    @Query("""
             select case when count(connection) > 0 then true else false end
             from ConnectionJpaEntity connection
             where ((connection.requester.id = :studentId and connection.recipient.id = :otherStudentId)

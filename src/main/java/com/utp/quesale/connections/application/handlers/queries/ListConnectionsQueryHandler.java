@@ -29,4 +29,16 @@ public class ListConnectionsQueryHandler {
                 .map(ConnectionsDtoAssembler::toDto)
                 .toList();
     }
+
+    public List<ConnectionDto> handleReceived(Long studentId) {
+        return connectionRepository.findAllReceivedByStudentId(studentId).stream()
+                .map(ConnectionsDtoAssembler::toDto)
+                .toList();
+    }
+
+    public List<ConnectionDto> handleSent(Long studentId) {
+        return connectionRepository.findAllSentByStudentId(studentId).stream()
+                .map(ConnectionsDtoAssembler::toDto)
+                .toList();
+    }
 }
