@@ -58,12 +58,23 @@
     }
 
     $('conectar').addEventListener('click', () => {
+      if (typeof StompJs === 'undefined') {
+        anotar('No se cargó stomp.js desde internet (sin conexión o bloqueado por el navegador). Revisa tu conexión y recarga la página.', 'error');
+        return;
+      }
+      if (location.protocol === 'file:') {
+        anotar('Abre esta página desde la API (http://localhost:8080/chat-test.html), no como archivo.', 'error');
+        return;
+      }
       const id = $('studentId').value;
       const protocolo = location.protocol === 'https:' ? 'wss' : 'ws';
+      const url = `${protocolo}://${location.host}/ws?studentId=${encodeURIComponent(id)}`;
+      let conectado = false;
       client = new StompJs.Client({
-        brokerURL: `${protocolo}://${location.host}/ws?studentId=${encodeURIComponent(id)}`,
+        brokerURL: url,
         reconnectDelay: 0,
         onConnect: () => {
+          conectado = true;
           $('estado').textContent = `conectado como estudiante ${id}`;
           $('conectar').disabled = true;
           $('desconectar').disabled = false;
@@ -72,7 +83,9 @@
             anotar(`De ${m.senderId} (${m.sentAt}): ${m.content}`, 'recibido');
           });
         },
+        onWebSocketError: () => anotar(`No se pudo abrir ${url}. ¿La API está corriendo en este host y puerto?`, 'error'),
         onWebSocketClose: () => {
+          if (!conectado) anotar('La conexión se cerró antes de iniciar. Reinicia la API para que cargue el WebSocket.', 'error');
           $('estado').textContent = 'desconectado';
           $('conectar').disabled = false;
           $('desconectar').disabled = true;
