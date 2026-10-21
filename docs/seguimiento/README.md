@@ -16,7 +16,7 @@ Se actualiza en cada fusión a `main`. Última actualización: 2026-10-21.
 | B4 | Eventos de dominio de `connections` y `meetups` | Ubes, Jesús | ✅ | `messaging` |
 | B5 | Capa de aplicación de `iam` (CQRS) y clase base pura en `shared` | André | ✅ | La capa de aplicación de todos |
 | B6 | `Message` mínimo con `MessageSentEvent` | Mafer | ✅ | El WebSocket |
-| B7 | WebSocket: configuración STOMP, manejador del evento y `/chat-test.html` | André | 🔨 PR #25 (configuración y página); falta el manejador en `messaging` | Chat en tiempo real |
+| B7 | WebSocket: configuración STOMP, manejador del evento y `/chat-test.html` | André | 🔨 Configuración y página ✅ (#25); manejador en PR #27 | Chat en tiempo real |
 
 ## Qué hay en `main` (21-oct)
 
