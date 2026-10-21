@@ -18,5 +18,9 @@ public interface ConnectionRepository {
 
     List<Connection> findAllByStudentIdAndStatus(Long studentId, ConnectionStatus status);
 
+    List<Connection> findAllReceivedByStudentId(Long studentId);
+
+    List<Connection> findAllSentByStudentId(Long studentId);
+
     boolean existsBetweenWithStatuses(Long studentId, Long otherStudentId, Set<ConnectionStatus> statuses);
 }

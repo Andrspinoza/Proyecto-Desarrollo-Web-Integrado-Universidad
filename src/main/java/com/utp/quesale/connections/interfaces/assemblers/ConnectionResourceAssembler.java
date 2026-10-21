@@ -1,6 +1,7 @@
 package com.utp.quesale.connections.interfaces.assemblers;
 
-import com.utp.quesale.connections.domain.aggregates.Connection;
+import com.utp.quesale.connections.application.commands.CreateConnectionCommand;
+import com.utp.quesale.connections.application.dtos.ConnectionDto;
 import com.utp.quesale.connections.interfaces.resources.ConnectionResource;
 import com.utp.quesale.connections.interfaces.resources.CreateConnectionResource;
 
@@ -9,13 +10,14 @@ public final class ConnectionResourceAssembler {
     private ConnectionResourceAssembler() {
     }
 
-    public static Connection toDomainFromResource(Long requesterId, CreateConnectionResource resource) {
-        return new Connection(requesterId, resource.recipientId());
+    public static CreateConnectionCommand toCreateCommand(Long requesterId, CreateConnectionResource resource) {
+        return new CreateConnectionCommand(requesterId, resource.recipientId());
     }
 
-    public static ConnectionResource toResourceFromEntity(Connection connection) {
-        return new ConnectionResource(connection.getId(), connection.getRequesterId(),
-                connection.getRecipientId(), connection.getStatus(), connection.getCreatedAt(),
-                connection.getRespondedAt());
+    public static ConnectionResource toResourceFromDto(ConnectionDto connection) {
+        return new ConnectionResource(connection.id(), connection.requesterId(),
+                connection.recipientId(), connection.status(), connection.createdAt(),
+                connection.respondedAt());
     }
+
 }
