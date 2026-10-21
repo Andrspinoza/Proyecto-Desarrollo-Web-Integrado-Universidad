@@ -1,7 +1,7 @@
 # Seguimiento de avance
 
 Panel general del proyecto. **Todo agente lo lee antes de empezar**, junto con el archivo de su módulo.
-Se actualiza en cada fusión a `main`. Última actualización: 2026-10-16.
+Se actualiza en cada fusión a `main`. Última actualización: 2026-10-21.
 
 **Estados:** ✅ en `main` · 🔨 en curso o en PR abierto · ⏳ pendiente.
 
@@ -12,49 +12,55 @@ Se actualiza en cada fusión a `main`. Última actualización: 2026-10-16.
 | B0 | Andamiaje y `shared` | André | ✅ | Todos |
 | B1 | `iam`: `University` completo | André | ✅ | Modelo para todos |
 | B2 | `StudentJpaEntity` (tabla `students` con FK) | Fernando | ✅ | La persistencia de todos |
+| B3 | Interfaces de las fachadas | Cada dueño | 🔨 `profiles`, `connections` y `moderation` con interfaz e implementación ✅; `iam` (universidades) pendiente de fusionar; `subscriptions` ⏳ (después de la entrega) | Quien consume cada fachada |
+| B4 | Eventos de dominio de `connections` y `meetups` | Ubes, Jesús | ✅ | `messaging` |
 | B5 | Capa de aplicación de `iam` (CQRS) y clase base pura en `shared` | André | ✅ | La capa de aplicación de todos |
-| B6 | `Message` mínimo con `MessageSentEvent` | Mafer | ⏳ | El WebSocket |
-| B7 | WebSocket: configuración STOMP, manejador del evento y `/chat-test.html` | André | ⏳ | Chat en tiempo real |
+| B6 | `Message` mínimo con `MessageSentEvent` | Mafer | ✅ | El WebSocket |
+| B7 | WebSocket: configuración STOMP, manejador del evento y `/chat-test.html` | André | ✅ | Chat en tiempo real |
+
+## Qué hay en `main` (21-oct)
+
+Endpoints vivos: `universities`, `connections`, `blocks` y `reports`. Además, el WebSocket `/ws` y la página
+`/chat-test.html`. Modelos para copiar: `iam`, `moderation` y `connections` (persistencia, aplicación, controllers y
+pruebas HTTP con MockMvc).
+
+| Módulo | Dueño | Dominio | Persistencia | Aplicación | Endpoints |
+|---|---|---|---|---|---|
+| `iam` | André | ✅ | ✅ | ✅ | ✅ |
+| `profiles` | Fernando | ✅ | ✅ | 🔨 Catálogos ✅; falta Student y Profile | ⏳ |
+| `meetups` | Jesús | ✅ | ✅ | ✅ | ⏳ |
+| `communities` | Mafer | ✅ | ✅ | ✅ | ⏳ Resources listos |
+| `messaging` | Mafer | 🔨 `Message` mínimo (B6) | ⏳ | 🔨 Manejador del evento ✅ | ⏳ |
+| `connections` | Ubes | ✅ | ✅ | ✅ | ✅ |
+| `moderation` | Ubes | ✅ | ✅ | ✅ | ✅ |
+| `subscriptions` | André | ⏳ | ⏳ | ⏳ | ⏳ Después de la entrega |
 
 ## Qué falta para la entrega del 22-oct
 
-Cada agregado avanza por niveles: dominio con tests → persistencia con test H2 → crear, obtener y
-listar → una o dos acciones clave. Endpoints simples, sin sobreingeniería. Swagger es requisito.
+Prioridad: **endpoints visibles en Swagger** (crear, obtener, listar y una o dos acciones clave). Sin sobreingeniería.
+Cada módulo abre un PR por bloque en cuanto lo termina; no se espera a tener todo.
 
-| Integrante | Módulo | Ya está en `main` | Falta para el 22-oct |
-|---|---|---|---|
-| **André** | `iam`, `shared` | `University` completo con su capa de aplicación (B5); clase base pura y despachador de eventos | `Account` con BCrypt; **B7** (WebSocket); pruebas en Swagger; tag `v0.2.0` |
-| **Fernando** | `profiles` | `Student`, `FullName`, `StudentRecordId`, `StudyCycle`, `StudentJpaEntity` | `StudentRepository`, mapper, adapter y test H2; `Profile` (carrera, ciclo, descripción, visibilidad), `Interest` y `Skill` con su persistencia; endpoints de estudiante; **EER Diagram y diccionario de datos** |
-| **Ubes** | `connections`, `moderation` | Dominio, repositorios, resources y colección Postman de `moderation` | `connections`: dominio, repositorio, resources y Postman en su PR; persistencia con test H2 de ambos; endpoints de crear, listar y aceptar conexión, y de reportar y bloquear; `00-setup` de Postman |
-| **Mafer** | `communities`, `messaging` | Dominio completo de `communities` (con `promote`), contratos y resources | Persistencia con test H2 (comunidades, miembros, publicaciones); endpoints de crear, listar, unirse y publicar; **B6** (`Message` mínimo y `MessageSentEvent`) |
-| **Jesús** | `meetups` | Nada todavía en `main` (dominio avanzado en su rama, sin subir) | Dominio con tests (cupo, organizador, cancelación, **visibilidad `PUBLIC` y `PRIVATE` e invitaciones**, eventos y excepciones según la guía 8.4); persistencia con bloqueo pesimista y test H2; endpoints de crear, listar, solicitar, invitar, confirmar y cancelar. Antes de abrir su PR: `git pull origin main` |
-| **Todos** | Capa de aplicación | — | Commands, queries, handlers, DTOs y assembler de su módulo, copiando `iam` (B5, ya en `main`); el controller pasa a usar los handlers |
+| Integrante | Módulo | Falta para el 22-oct |
+|---|---|---|
+| **André** | `iam`, `shared` | Fusionar la fachada de universidades de `iam`; pruebas con MySQL y Swagger; panel al día; tag `v0.2.0`. `Account` solo si sobra tiempo |
+| **Fernando** | `profiles` | **1.º** `POST` y `GET` de estudiantes (`CreateStudentCommandHandler` con la fachada de `iam`) y su controller; **2.º** controllers de intereses y habilidades; **3.º** **EER Diagram y diccionario de datos** al final, cuando existan todas las tablas |
+| **Jesús** | `meetups` | Resources, assembler y `MeetupsController` con los handlers de `main`: crear, listar, obtener, solicitar, confirmar, invitar y cancelar; prueba HTTP y colección Postman |
+| **Mafer** | `communities`, `messaging` | `CommunitiesController` (crear, listar, unirse y publicar); después, persistencia de `messaging` y `POST /api/v1/messages` para el chat de punta a punta |
+| **Ubes** | `connections`, `moderation` | Sus dos módulos están completos. Le queda el `00-setup` de Postman |
 
-## En qué orden se hace
+Si el tiempo aprieta, **se recorta el final de la lista** (`Account`, afinidad, `Notification`, persistencia de
+`messaging`, acciones secundarias), nunca la persistencia de lo que ya existe.
 
-Dentro de cada ola, todos trabajan **en paralelo**; no se pasa a la siguiente ola sin lo que pide.
+## Quién depende de quién
 
-| Ola | Cuándo | Qué se hace | Quién | Necesita |
-|---|---|---|---|---|
-| **1** | Vie 16 – Sáb 17 | Cerrar PR de dominio de `meetups` (eventos y excepciones, guía 8.4) | Jesús | Nada |
-| | | `StudentRepository`, mapper, adapter y test H2 | Fernando | B2 ✅ |
-| | | PR de dominio de `connections`; persistencia de `moderation` | Ubes | B2 ✅ |
-| | | Persistencia de `communities` | Mafer | B2 ✅ |
-| | | **B5**: clase base pura, despachador y capa de aplicación de `iam` | André | Nada |
-| **2** | Dom 18 – Lun 19 | Persistencia con bloqueo pesimista de `meetups` | Jesús | Dominio de `meetups` fusionado |
-| | | `Profile`, `Interest`, `Skill` y su persistencia | Fernando | Adapter de `Student` |
-| | | Persistencia de `connections` | Ubes | Dominio de `connections` fusionado |
-| | | **B6**: `Message` mínimo con `MessageSentEvent` | Mafer | Persistencia de `communities` |
-| | | **Capa de aplicación** de cada módulo, copiando `iam` | Cada dueño | **B5 en `main`** |
-| **3** | Mar 20 | Controllers de cada módulo, con crear, obtener, listar y una o dos acciones clave | Cada dueño | Su persistencia y su capa de aplicación |
-| | | **B7**: WebSocket y `/chat-test.html` | André | B6 |
-| **4** | Mié 21 | Colecciones Postman y `00-setup`; pruebas en Swagger | Ubes y cada dueño | Los controllers |
-| | | **EER Diagram y diccionario de datos** | Fernando | Todas las tablas creadas |
-| | | `Account` y ensayo de la demo; tag `v0.2.0` | André | Todo lo anterior |
-| **Entrega** | Jue 22 | APF2 | Todos | — |
-
-Si una ola se atrasa, **se recorta el final de la lista (controllers de acciones secundarias,
-`Account`), nunca la persistencia**: sin tablas no hay EER ni demo.
+- **No existe todavía un endpoint para crear estudiantes**: `connections`, `meetups` y `communities` no se pueden
+  demostrar sin estudiantes. Por eso los estudiantes de Fernando son lo primero, y dependen de la fachada de universidades
+  de `iam` (André).
+- El **EER Diagram** (Fernando) espera las tablas: ya existen todas salvo `messages`.
+- El **chat de punta a punta** necesita la persistencia y los controllers de `messaging` (Mafer); las fachadas de
+  `connections` y `moderation` que usa ya están.
+- El tag `v0.2.0` espera a que todo esté fusionado.
+- Jesús, Mafer y Ubes no se bloquean entre sí.
 
 ## Después de la entrega
 
