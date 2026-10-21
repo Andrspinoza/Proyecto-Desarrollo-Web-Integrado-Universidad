@@ -482,10 +482,14 @@ llegue después. Cambiar una firma exige avisar a quienes la usan y registrarlo.
 ```java
 // iam/interfaces/acl — André
 public interface IamContextFacade {
-    boolean existsAccount(Long accountId);
-    boolean isAdmin(Long accountId);
-    boolean isActiveAndVerified(Long accountId);
-    Optional<Long> universityOfAccount(Long accountId);
+    // Publicadas (21-oct), las usa profiles para crear estudiantes
+    boolean isActiveUniversity(Long universityId);
+    boolean universityAcceptsEmail(Long universityId, String email);
+    // Se agregan cuando exista Account
+    // boolean existsAccount(Long accountId);
+    // boolean isAdmin(Long accountId);
+    // boolean isActiveAndVerified(Long accountId);
+    // Optional<Long> universityOfAccount(Long accountId);
 }
 
 // profiles/interfaces/acl — Fernando
