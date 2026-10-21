@@ -326,6 +326,9 @@ El agente revisa esta lista y la persona la confirma:
    «Por abrir» ni «Pendiente».
 9. Si el PR necesita otro sin fusionar, se escribe en la descripción.
 10. Trae `main` a tu rama antes de empezar el bloque.
+11. `./mvnw test` incluye `ApplicationStartupTest`, que arranca la aplicación completa con H2. Si
+    falla, no abras el PR: casi siempre falta la implementación de una fachada (`XContextFacadeImpl`,
+    `@Service`) o un bean. Los tests con repositorios falsos no detectan ese error.
 
 ### Seguimiento de avance
 
@@ -482,3 +485,4 @@ Se llena después de cada revisión. Cada observación genera una tarea o un cam
 | 2026-10-16 | André · Claude Code | Sección 2 sin tablas de estado: el estado vive solo en `docs/seguimiento/README.md`; D-03 decidida con la estructura CQRS; piezas B5 a B7 | Evitar dos fuentes de estado que se contradigan; PR #4, #5 y #7 fusionados |
 | 2026-10-15 | André · Claude Code | Reglas para partir el trabajo en PR («Punto de PR») y archivos `docs/seguimiento/<modulo>.md` | Los agentes no sabían dónde cortar un PR y el avance solo constaba en commits y PR, ilegibles sin `gh` |
 | 2026-10-21 | André · Claude Code | Lista «Antes de abrir el PR: errores frecuentes» en la sección 6 y recordatorio en la plantilla de PR de listar todos los commits | Errores repetidos en los PR del equipo (commits que no compilan solos, descripciones desactualizadas, seguimiento sin número de PR, plantilla incompleta) |
+| 2026-10-21 | André · Claude Code | Punto 11 de «Antes de abrir el PR»: `ApplicationStartupTest` arranca la aplicación completa en `./mvnw test` | `main` quedó sin arrancar por una fachada sin implementación (PR #28) y los tests con repositorios falsos no lo detectaron |
