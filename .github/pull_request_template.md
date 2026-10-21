@@ -9,6 +9,8 @@ Closes #
 
 ## Commits incluidos
 
+Lista todos los commits de la rama, incluido el de seguimiento.
+
 1.
 
 ## Cómo probarlo

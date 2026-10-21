@@ -1,0 +1,355 @@
+{
+  "info": {
+    "_postman_id": "a1e0a1a8-e183-4a58-9d85-0a444dcf0b7a",
+    "name": "Que Sale - Connections",
+    "description": "Solicitudes Postman previstas para los endpoints de connections, que se expondrán en un bloque posterior. Este PR todavía no incluye controllers, así que las solicitudes no están listas para ejecutarse. Crear solicitudes también dependerá de las fachadas de perfiles y suscripciones.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "studentId",
+      "value": "1"
+    },
+    {
+      "key": "recipientId",
+      "value": "2"
+    },
+    {
+      "key": "connectionId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create connection request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"recipientId\": {{recipientId}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/connections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "connections"
+          ]
+        },
+        "description": "Expected: 201 Created for a valid request. Store the returned connection id in the collection variable before running response actions."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Connection request is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "if (pm.response.code === 201) {",
+              "    const body = pm.response.json();",
+              "    if (body.id !== undefined) pm.collectionVariables.set('connectionId', body.id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List my connections",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/connections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "connections"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Connections are listed', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List my connections by status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/connections?status=PENDING",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "connections"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "PENDING"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Connections are filtered by status', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List received pending connections",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/connections/received",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "connections",
+            "received"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Received connections are listed', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List sent pending connections",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/connections/sent",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "connections",
+            "sent"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Sent connections are listed', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accept connection",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{recipientId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/connections/{{connectionId}}/accept",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "connections",
+            "{{connectionId}}",
+            "accept"
+          ]
+        },
+        "description": "Runs as recipientId, the recipient of a pending connection. Expected: 200 OK."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Connection is accepted', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject connection",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{recipientId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/connections/{{connectionId}}/reject",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "connections",
+            "{{connectionId}}",
+            "reject"
+          ]
+        },
+        "description": "Before sending, set the collection variable connectionId to a different PENDING connection received by recipientId; do not reuse the connection accepted above. Expected: 200 OK."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Connection is rejected', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cancel connection request",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{studentId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/connections/{{connectionId}}/cancel",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "connections",
+            "{{connectionId}}",
+            "cancel"
+          ]
+        },
+        "description": "Before sending, set the collection variable connectionId to a separate PENDING connection requested by studentId; do not reuse a connection accepted or rejected above. Expected: 200 OK."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Connection request is cancelled', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
