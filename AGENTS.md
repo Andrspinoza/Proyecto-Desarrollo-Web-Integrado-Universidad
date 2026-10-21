@@ -309,6 +309,24 @@ bloque grande se parte en dos PR; un PR no pasa de unos 15 commits.
 4. Si el PR necesita correcciones, se agregan commits a la misma rama y el PR se actualiza solo.
    Nunca `--amend` ni `push --force`.
 
+### Antes de abrir el PR: errores frecuentes
+
+El agente revisa esta lista y la persona la confirma:
+
+1. Un solo módulo por PR. Nada de archivos de otro módulo, de `pom.xml` ni de `shared`.
+2. Cada commit compila solo: `./mvnw -q compile` antes de cada commit. Un archivo que usa una
+   clase nueva va en el mismo commit que esa clase, o después.
+3. Commits pequeños por capa, nunca uno con decenas de archivos.
+4. Título `tipo(ámbito): resumen`, sin tildes, ≤ 72 caracteres, igual que los commits.
+5. Descripción al día: lista todos los commits de la rama, el número real de pruebas y nada que
+   no esté en el PR.
+6. `Closes #NN` solo si existe el issue; si no, se quita la línea.
+7. Plantilla completa: sección Checklist con las casillas marcadas `[x]`.
+8. Seguimiento: `docs/seguimiento/<modulo>.md` con el número del PR y el siguiente paso; nunca
+   «Por abrir» ni «Pendiente».
+9. Si el PR necesita otro sin fusionar, se escribe en la descripción.
+10. Trae `main` a tu rama antes de empezar el bloque.
+
 ### Seguimiento de avance
 
 La constancia del avance no puede depender de `gh` ni de los PR de GitHub. Cada módulo tiene su
@@ -463,3 +481,4 @@ Se llena después de cada revisión. Cada observación genera una tarea o un cam
 | 2026-10-19 | André · Claude Code | B5 entregada: capa de aplicación de `iam` como modelo; D-03 y la pregunta frecuente de la capa de aplicación actualizadas; panel y guía (sección 4) apuntan a `iam` | La capa de aplicación de cada módulo se copia de `iam` |
 | 2026-10-16 | André · Claude Code | Sección 2 sin tablas de estado: el estado vive solo en `docs/seguimiento/README.md`; D-03 decidida con la estructura CQRS; piezas B5 a B7 | Evitar dos fuentes de estado que se contradigan; PR #4, #5 y #7 fusionados |
 | 2026-10-15 | André · Claude Code | Reglas para partir el trabajo en PR («Punto de PR») y archivos `docs/seguimiento/<modulo>.md` | Los agentes no sabían dónde cortar un PR y el avance solo constaba en commits y PR, ilegibles sin `gh` |
+| 2026-10-21 | André · Claude Code | Lista «Antes de abrir el PR: errores frecuentes» en la sección 6 y recordatorio en la plantilla de PR de listar todos los commits | Errores repetidos en los PR del equipo (commits que no compilan solos, descripciones desactualizadas, seguimiento sin número de PR, plantilla incompleta) |
