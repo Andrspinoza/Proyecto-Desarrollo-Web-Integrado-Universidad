@@ -3,13 +3,19 @@ package com.utp.quesale.communities.application.handlers.commands;
 import com.utp.quesale.communities.application.assemblers.CommunitiesDtoAssembler;
 import com.utp.quesale.communities.application.commands.CreateCommunityCommand;
 import com.utp.quesale.communities.application.commands.JoinCommunityCommand;
+import com.utp.quesale.communities.application.commands.LeaveCommunityCommand;
+import com.utp.quesale.communities.application.commands.PromoteMemberCommand;
+import com.utp.quesale.communities.application.commands.PublishPostCommand;
 import com.utp.quesale.communities.application.commands.UpdateCommunityCommand;
 import com.utp.quesale.communities.application.dtos.CommunityDto;
+import com.utp.quesale.communities.application.dtos.CommunityPostDto;
 import com.utp.quesale.communities.domain.aggregates.Community;
+import com.utp.quesale.communities.domain.entities.CommunityPost;
 import com.utp.quesale.communities.domain.exceptions.CommunityNameAlreadyExistsException;
 import com.utp.quesale.communities.domain.exceptions.CommunityNotFoundException;
 import com.utp.quesale.communities.domain.exceptions.DifferentUniversityException;
 import com.utp.quesale.communities.domain.exceptions.StudentProfileRequiredException;
+import com.utp.quesale.communities.domain.repositories.CommunityPostRepository;
 import com.utp.quesale.communities.domain.repositories.CommunityRepository;
 import com.utp.quesale.profiles.interfaces.acl.ProfilesContextFacade;
 import com.utp.quesale.shared.domain.events.DomainEventDispatcher;
@@ -21,12 +27,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommunityCommandHandler {
 
     private final CommunityRepository communityRepository;
+    private final CommunityPostRepository postRepository;
     private final ProfilesContextFacade profiles;
     private final DomainEventDispatcher events;
 
-    public CommunityCommandHandler(CommunityRepository communityRepository, ProfilesContextFacade profiles,
-                                   DomainEventDispatcher events) {
+    public CommunityCommandHandler(CommunityRepository communityRepository, CommunityPostRepository postRepository,
+                                   ProfilesContextFacade profiles, DomainEventDispatcher events) {
         this.communityRepository = communityRepository;
+        this.postRepository = postRepository;
         this.profiles = profiles;
         this.events = events;
     }
@@ -67,6 +75,31 @@ public class CommunityCommandHandler {
         Community saved = communityRepository.update(community);
         events.dispatch(saved);
         return CommunitiesDtoAssembler.toDto(saved);
+    }
+
+    @Transactional
+    public void handle(LeaveCommunityCommand command) {
+        Community community = findCommunity(command.communityId());
+        // El agregado impide que el último ADMIN abandone la comunidad
+        community.leave(command.studentId());
+        events.dispatch(communityRepository.update(community));
+    }
+
+    @Transactional
+    public CommunityDto handle(PromoteMemberCommand command) {
+        Community community = findCommunity(command.communityId());
+        community.promote(command.memberId(), command.requesterId());
+        Community saved = communityRepository.update(community);
+        events.dispatch(saved);
+        return CommunitiesDtoAssembler.toDto(saved);
+    }
+
+    @Transactional
+    public CommunityPostDto handle(PublishPostCommand command) {
+        Community community = findCommunity(command.communityId());
+        // El agregado exige que quien publica sea miembro
+        CommunityPost post = community.publish(command.authorId(), command.content());
+        return CommunitiesDtoAssembler.toDto(postRepository.save(post));
     }
 
     private Community findCommunity(Long communityId) {

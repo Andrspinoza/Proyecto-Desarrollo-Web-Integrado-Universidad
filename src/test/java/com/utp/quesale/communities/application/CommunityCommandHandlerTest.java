@@ -2,14 +2,20 @@ package com.utp.quesale.communities.application;
 
 import com.utp.quesale.communities.application.commands.CreateCommunityCommand;
 import com.utp.quesale.communities.application.commands.JoinCommunityCommand;
+import com.utp.quesale.communities.application.commands.LeaveCommunityCommand;
+import com.utp.quesale.communities.application.commands.PromoteMemberCommand;
+import com.utp.quesale.communities.application.commands.PublishPostCommand;
 import com.utp.quesale.communities.application.commands.UpdateCommunityCommand;
 import com.utp.quesale.communities.application.dtos.CommunityDto;
+import com.utp.quesale.communities.application.dtos.CommunityPostDto;
 import com.utp.quesale.communities.application.handlers.commands.CommunityCommandHandler;
 import com.utp.quesale.communities.domain.exceptions.AlreadyMemberException;
 import com.utp.quesale.communities.domain.exceptions.CommunityNameAlreadyExistsException;
 import com.utp.quesale.communities.domain.exceptions.CommunityNotFoundException;
 import com.utp.quesale.communities.domain.exceptions.DifferentUniversityException;
+import com.utp.quesale.communities.domain.exceptions.LastAdminCannotLeaveException;
 import com.utp.quesale.communities.domain.exceptions.NotCommunityAdminException;
+import com.utp.quesale.communities.domain.exceptions.NotMemberException;
 import com.utp.quesale.communities.domain.exceptions.StudentProfileRequiredException;
 import com.utp.quesale.shared.domain.events.DomainEventDispatcher;
 import com.utp.quesale.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
@@ -32,10 +38,12 @@ class CommunityCommandHandlerTest {
     private static final Long OTHER_UNIVERSITY_STUDENT = 20L;
 
     private final InMemoryCommunityRepository repository = new InMemoryCommunityRepository();
+    private final InMemoryCommunityPostRepository postRepository = new InMemoryCommunityPostRepository();
     private final FakeProfilesContextFacade profiles = new FakeProfilesContextFacade();
     private final List<AbstractDomainAggregateRoot<?>> dispatched = new ArrayList<>();
     private final DomainEventDispatcher events = dispatched::add;
-    private final CommunityCommandHandler handler = new CommunityCommandHandler(repository, profiles, events);
+    private final CommunityCommandHandler handler =
+            new CommunityCommandHandler(repository, postRepository, profiles, events);
 
     @BeforeEach
     void registerStudents() {
@@ -161,5 +169,91 @@ class CommunityCommandHandlerTest {
         assertThrows(AlreadyMemberException.class, () -> handler.handle(new JoinCommunityCommand(1L, CREATOR)));
         assertThrows(StudentProfileRequiredException.class, () -> handler.handle(new JoinCommunityCommand(1L, 99L)));
         assertThrows(CommunityNotFoundException.class, () -> handler.handle(new JoinCommunityCommand(99L, MEMBER)));
+    }
+
+    @Test
+    @DisplayName("Un miembro puede salir de la comunidad")
+    void memberLeaves() {
+        createChess();
+        handler.handle(new JoinCommunityCommand(1L, MEMBER));
+
+        handler.handle(new LeaveCommunityCommand(1L, MEMBER));
+
+        assertFalse(repository.findById(1L).orElseThrow().isMember(MEMBER));
+    }
+
+    @Test
+    @DisplayName("El único administrador no puede salir")
+    void lastAdminCannotLeave() {
+        createChess();
+        handler.handle(new JoinCommunityCommand(1L, MEMBER));
+
+        assertThrows(LastAdminCannotLeaveException.class,
+                () -> handler.handle(new LeaveCommunityCommand(1L, CREATOR)));
+        assertTrue(repository.findById(1L).orElseThrow().isMember(CREATOR));
+    }
+
+    @Test
+    @DisplayName("Quien no es miembro no puede salir")
+    void nonMemberCannotLeave() {
+        createChess();
+
+        assertThrows(NotMemberException.class, () -> handler.handle(new LeaveCommunityCommand(1L, MEMBER)));
+    }
+
+    @Test
+    @DisplayName("El administrador promueve a un miembro y entonces el creador ya puede salir")
+    void promotesMemberSoAdminCanLeave() {
+        createChess();
+        handler.handle(new JoinCommunityCommand(1L, MEMBER));
+
+        handler.handle(new PromoteMemberCommand(1L, MEMBER, CREATOR));
+
+        assertTrue(repository.findById(1L).orElseThrow().isAdmin(MEMBER));
+        assertDoesNotThrow(() -> handler.handle(new LeaveCommunityCommand(1L, CREATOR)));
+    }
+
+    @Test
+    @DisplayName("Quien no es administrador no promueve a nadie")
+    void nonAdminCannotPromote() {
+        createChess();
+        handler.handle(new JoinCommunityCommand(1L, MEMBER));
+
+        assertThrows(NotCommunityAdminException.class,
+                () -> handler.handle(new PromoteMemberCommand(1L, MEMBER, MEMBER)));
+    }
+
+    @Test
+    @DisplayName("Un miembro publica y la publicación queda guardada con su id")
+    void memberPublishes() {
+        createChess();
+
+        CommunityPostDto dto = handler.handle(new PublishPostCommand(1L, CREATOR, "Hola a todos"));
+
+        assertEquals(1L, dto.id());
+        assertEquals(1L, dto.communityId());
+        assertEquals(CREATOR, dto.authorId());
+        assertEquals(1, postRepository.findAllByCommunityId(1L).size());
+    }
+
+    @Test
+    @DisplayName("Quien no es miembro no publica y no se guarda nada")
+    void nonMemberCannotPublish() {
+        createChess();
+
+        assertThrows(NotMemberException.class,
+                () -> handler.handle(new PublishPostCommand(1L, MEMBER, "Hola")));
+        assertTrue(postRepository.findAllByCommunityId(1L).isEmpty());
+    }
+
+    @Test
+    @DisplayName("No publica contenido vacío ni en una comunidad inexistente")
+    void rejectsInvalidPosts() {
+        createChess();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> handler.handle(new PublishPostCommand(1L, CREATOR, " ")));
+        assertThrows(CommunityNotFoundException.class,
+                () -> handler.handle(new PublishPostCommand(99L, CREATOR, "Hola")));
     }
 }
