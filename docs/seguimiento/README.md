@@ -1,7 +1,7 @@
 # Seguimiento de avance
 
 Panel general del proyecto. **Todo agente lo lee antes de empezar**, junto con el archivo de su módulo.
-Se actualiza en cada fusión a `main`. Última actualización: 2026-10-21.
+Se actualiza en cada fusión a `main`. Última actualización: 2026-10-22.
 
 **Estados:** ✅ en `main` · 🔨 en curso o en PR abierto · ⏳ pendiente.
 
@@ -12,54 +12,51 @@ Se actualiza en cada fusión a `main`. Última actualización: 2026-10-21.
 | B0 | Andamiaje y `shared` | André | ✅ | Todos |
 | B1 | `iam`: `University` completo | André | ✅ | Modelo para todos |
 | B2 | `StudentJpaEntity` (tabla `students` con FK) | Fernando | ✅ | La persistencia de todos |
-| B3 | Interfaces de las fachadas | Cada dueño | 🔨 `profiles`, `connections` y `moderation` con interfaz e implementación ✅; `iam` (universidades) pendiente de fusionar; `subscriptions` ⏳ (después de la entrega) | Quien consume cada fachada |
+| B3 | Interfaces de las fachadas | Cada dueño | ✅ `profiles`, `connections`, `moderation` e `iam` con interfaz e implementación; `subscriptions` queda para después de la entrega | Quien las consume |
 | B4 | Eventos de dominio de `connections` y `meetups` | Ubes, Jesús | ✅ | `messaging` |
 | B5 | Capa de aplicación de `iam` (CQRS) y clase base pura en `shared` | André | ✅ | La capa de aplicación de todos |
 | B6 | `Message` mínimo con `MessageSentEvent` | Mafer | ✅ | El WebSocket |
 | B7 | WebSocket: configuración STOMP, manejador del evento y `/chat-test.html` | André | ✅ | Chat en tiempo real |
 
-## Qué hay en `main` (21-oct)
+## Qué hay en `main` (22-oct)
 
-Endpoints vivos: `universities`, `connections`, `blocks` y `reports`. Además, el WebSocket `/ws` y la página
-`/chat-test.html`. Modelos para copiar: `iam`, `moderation` y `connections` (persistencia, aplicación, controllers y
-pruebas HTTP con MockMvc).
+Endpoints vivos: `universities`, `students`, `interests`, `skills`, `connections`, `blocks`, `reports`, `communities` y
+`meetups` (con participaciones e invitaciones). Además, el WebSocket `/ws` y la página `/chat-test.html`. La colección
+Postman `docs/api/00-setup.postman_collection.json` prepara los datos de prueba (se corre **una sola vez con la base
+vacía**). Modelos para copiar: `iam`, `moderation` y `connections` (persistencia, aplicación, controllers y pruebas HTTP).
 
 | Módulo | Dueño | Dominio | Persistencia | Aplicación | Endpoints |
 |---|---|---|---|---|---|
 | `iam` | André | ✅ | ✅ | ✅ | ✅ |
-| `profiles` | Fernando | ✅ | ✅ | 🔨 Catálogos ✅; falta Student y Profile | ⏳ |
-| `meetups` | Jesús | ✅ | ✅ | ✅ | ⏳ |
-| `communities` | Mafer | ✅ | ✅ | ✅ | ⏳ Resources listos |
-| `messaging` | Mafer | 🔨 `Message` mínimo (B6) | ⏳ | 🔨 Manejador del evento ✅ | ⏳ |
+| `profiles` | Fernando | ✅ | ✅ | 🔨 Catálogos y Student ✅; falta acciones de Profile | 🔨 `students`, `interests`, `skills` ✅; falta Profile |
+| `meetups` | Jesús | ✅ | ✅ | ✅ | ✅ |
+| `communities` | Mafer | ✅ | ✅ | ✅ | ✅ |
+| `messaging` | Mafer | 🔨 `Message` mínimo (B6) | ✅ | 🔨 Manejador del evento ✅; falta enviar y consultar | ⏳ |
 | `connections` | Ubes | ✅ | ✅ | ✅ | ✅ |
 | `moderation` | Ubes | ✅ | ✅ | ✅ | ✅ |
 | `subscriptions` | André | ⏳ | ⏳ | ⏳ | ⏳ Después de la entrega |
 
-## Qué falta para la entrega del 22-oct
+## Qué falta para la entrega del 22-oct (4 p. m.)
 
-Prioridad: **endpoints visibles en Swagger** (crear, obtener, listar y una o dos acciones clave). Sin sobreingeniería.
-Cada módulo abre un PR por bloque en cuanto lo termina; no se espera a tener todo.
+Prioridad: lo que se **muestra en Swagger y en la presentación**. Sin sobreingeniería.
 
-| Integrante | Módulo | Falta para el 22-oct |
+| Integrante | Módulo | Falta |
 |---|---|---|
-| **André** | `iam`, `shared` | Fusionar la fachada de universidades de `iam`; pruebas con MySQL y Swagger; panel al día; tag `v0.2.0`. `Account` solo si sobra tiempo |
-| **Fernando** | `profiles` | **1.º** `POST` y `GET` de estudiantes (`CreateStudentCommandHandler` con la fachada de `iam`) y su controller; **2.º** controllers de intereses y habilidades; **3.º** **EER Diagram y diccionario de datos** al final, cuando existan todas las tablas |
-| **Jesús** | `meetups` | Resources, assembler y `MeetupsController` con los handlers de `main`: crear, listar, obtener, solicitar, confirmar, invitar y cancelar; prueba HTTP y colección Postman |
-| **Mafer** | `communities`, `messaging` | `CommunitiesController` (crear, listar, unirse y publicar); después, persistencia de `messaging` y `POST /api/v1/messages` para el chat de punta a punta |
-| **Ubes** | `connections`, `moderation` | Sus dos módulos están completos. Le queda el `00-setup` de Postman |
+| **André** | `iam`, `shared` | Prueba con MySQL real; tag `v0.2.0`. `Account` y `subscriptions` quedan fuera de esta entrega |
+| **Fernando** | `profiles` | **EER Diagram y diccionario de datos** (ya existen todas las tablas); acciones de perfil solo si sobra tiempo |
+| **Jesús** | `meetups` | Nada obligatorio: ensayar la presentación de su módulo |
+| **Mafer** | `messaging` | Capa de aplicación (enviar mensaje y ver la conversación, con las fachadas de `connections` y `moderation`, ya en `main`) y `POST /api/v1/messages` + `GET /api/v1/messages/conversations/{id}`; además el guion de exposición |
+| **Ubes** | `connections`, `moderation` | Nada obligatorio: casos de prueba y ensayo de la presentación |
 
-Si el tiempo aprieta, **se recorta el final de la lista** (`Account`, afinidad, `Notification`, persistencia de
-`messaging`, acciones secundarias), nunca la persistencia de lo que ya existe.
+Si el tiempo aprieta, **se recorta el final de la lista** (acciones de perfil, afinidad, `Notification`, endpoints de
+`messaging`), nunca la persistencia de lo que ya existe.
 
 ## Quién depende de quién
 
-- **No existe todavía un endpoint para crear estudiantes**: `connections`, `meetups` y `communities` no se pueden
-  demostrar sin estudiantes. Por eso los estudiantes de Fernando son lo primero, y dependen de la fachada de universidades
-  de `iam` (André).
-- El **EER Diagram** (Fernando) espera las tablas: ya existen todas salvo `messages`.
-- El **chat de punta a punta** necesita la persistencia y los controllers de `messaging` (Mafer); las fachadas de
-  `connections` y `moderation` que usa ya están.
-- El tag `v0.2.0` espera a que todo esté fusionado.
+- El **EER Diagram** (Fernando) ya no espera a nadie: están todas las tablas, incluida `messages`.
+- El **chat de punta a punta** depende solo de Mafer (aplicación y controller de `messaging`); las fachadas que usa ya
+  están en `main`.
+- El tag `v0.2.0` espera la prueba con MySQL y el EER.
 - Jesús, Mafer y Ubes no se bloquean entre sí.
 
 ## Después de la entrega
