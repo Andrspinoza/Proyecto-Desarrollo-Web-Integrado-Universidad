@@ -27,7 +27,6 @@ public class GetCommunityQueryHandler {
     public CommunityDto handle(GetCommunityQuery query) {
         Community community = communityRepository.findById(query.communityId())
                 .orElseThrow(() -> new CommunityNotFoundException(query.communityId()));
-        // Las comunidades solo se ven dentro de la propia universidad
         Long universityId = profiles.universityOfStudent(query.requesterId())
                 .orElseThrow(() -> new StudentProfileRequiredException(query.requesterId()));
         if (!universityId.equals(community.getUniversityId()))

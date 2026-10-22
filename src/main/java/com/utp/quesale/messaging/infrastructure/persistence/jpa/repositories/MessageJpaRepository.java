@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface MessageJpaRepository extends JpaRepository<MessageJpaEntity, Long> {
 
-    // Los mensajes entre dos estudiantes en cualquier sentido, del más antiguo al más reciente
     @Query("""
             select m from MessageJpaEntity m
             where (m.sender.id = :studentId and m.recipient.id = :otherStudentId)

@@ -14,7 +14,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Prueba el despachador simulando la transacción: no necesita Spring ni base de datos
 class SpringDomainEventDispatcherTest {
 
     private static class SampleAggregate extends AbstractDomainAggregateRoot<SampleAggregate> {

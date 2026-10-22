@@ -24,7 +24,6 @@ public class StudentJpaEntity {
     @Column(name = "record_id", nullable = false, length = 36, updatable = false)
     private String recordId;
 
-    // La relación JPA crea la FK real que necesitan MySQL y el diagrama EER.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "university_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_student_university"))
@@ -46,7 +45,6 @@ public class StudentJpaEntity {
             cascade = CascadeType.ALL, orphanRemoval = true)
     private ProfileJpaEntity profile;
 
-    // Mantiene ambos lados de la relación; el perfil contiene la FK a students.
     public void setProfile(ProfileJpaEntity profile) {
         if (this.profile == profile) return;
         if (this.profile != null) this.profile.setStudent(null);

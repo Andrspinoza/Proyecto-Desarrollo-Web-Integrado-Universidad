@@ -12,8 +12,6 @@ import org.springframework.context.annotation.Import;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Prueba de la capa de persistencia sobre H2 en memoria:
-// el adapter guarda un objeto de dominio, lo vuelve a leer y se verifica que no se perdió nada
 @DataJpaTest
 @Import({UniversityRepositoryAdapter.class, UniversityPersistenceMapper.class})
 class UniversityRepositoryAdapterTest {

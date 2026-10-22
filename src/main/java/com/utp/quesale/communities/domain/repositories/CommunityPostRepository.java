@@ -7,6 +7,5 @@ import java.util.List;
 public interface CommunityPostRepository {
     CommunityPost save(CommunityPost post);
 
-    // Más recientes primero
     List<CommunityPost> findAllByCommunityId(Long communityId);
 }

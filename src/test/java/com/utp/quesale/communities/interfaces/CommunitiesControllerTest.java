@@ -50,7 +50,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Prueba HTTP del controller: sin base de datos, con los handlers simulados
 class CommunitiesControllerTest {
 
     private static final Instant NOW = Instant.parse("2026-10-21T10:00:00Z");

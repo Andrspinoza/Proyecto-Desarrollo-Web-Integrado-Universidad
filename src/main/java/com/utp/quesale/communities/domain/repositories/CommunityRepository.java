@@ -16,6 +16,5 @@ public interface CommunityRepository {
 
     boolean existsById(Long id);
 
-    // El nombre es único por universidad (sin distinguir mayúsculas)
     boolean existsByUniversityIdAndName(Long universityId, String name);
 }

@@ -11,7 +11,6 @@ import com.utp.quesale.shared.domain.events.DomainEventDispatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// Solo coordina: las reglas de la universidad viven en el agregado
 @Service
 public class UniversityCommandHandler {
 

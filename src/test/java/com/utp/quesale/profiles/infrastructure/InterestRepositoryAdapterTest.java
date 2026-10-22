@@ -27,7 +27,6 @@ class InterestRepositoryAdapterTest {
     @Test
     void savesAndReadsCatalogData() {
         Interest saved = repository.save(new Interest("Programacion"));
-        // Fuerza la lectura desde H2 en lugar de usar la caché de JPA.
         entityManager.flush();
         entityManager.clear();
 

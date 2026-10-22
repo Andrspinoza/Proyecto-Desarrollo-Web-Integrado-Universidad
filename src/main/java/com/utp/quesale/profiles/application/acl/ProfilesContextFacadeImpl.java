@@ -22,7 +22,6 @@ public class ProfilesContextFacadeImpl implements ProfilesContextFacade {
 
     @Override
     public Optional<Long> studentIdOfAccount(Long accountId) {
-        // Account y su vínculo con Student aún no existen; sus IDs no son intercambiables.
         return Optional.empty();
     }
 

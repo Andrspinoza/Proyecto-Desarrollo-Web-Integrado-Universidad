@@ -20,7 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Prueba el controller con HTTP simulado y handlers reales sobre un repositorio en memoria
 class UniversitiesControllerTest {
 
     private MockMvc mockMvc;

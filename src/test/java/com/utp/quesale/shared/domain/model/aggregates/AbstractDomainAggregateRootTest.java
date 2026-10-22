@@ -7,7 +7,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Pruebas de dominio puras: sin Spring ni base de datos
 class AbstractDomainAggregateRootTest {
 
     private static class SampleAggregate extends AbstractDomainAggregateRoot<SampleAggregate> {

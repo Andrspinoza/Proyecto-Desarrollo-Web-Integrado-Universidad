@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-// El controller solo traduce HTTP: arma el command o la query, llama al handler y arma el resource
 @RestController
 @RequestMapping("/api/v1/universities")
 @Tag(name = "Universities", description = "Universidades admitidas y su dominio de correo institucional")

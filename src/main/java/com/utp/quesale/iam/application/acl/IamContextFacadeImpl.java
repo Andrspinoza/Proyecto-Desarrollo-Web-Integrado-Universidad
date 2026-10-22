@@ -5,7 +5,6 @@ import com.utp.quesale.iam.domain.repositories.UniversityRepository;
 import com.utp.quesale.iam.interfaces.acl.IamContextFacade;
 import org.springframework.stereotype.Service;
 
-// Implementación de la fachada: profiles la usa para validar la universidad y el correo de un estudiante
 @Service
 public class IamContextFacadeImpl implements IamContextFacade {
 

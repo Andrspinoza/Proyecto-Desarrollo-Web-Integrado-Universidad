@@ -29,7 +29,6 @@ public class ListMembersQueryHandler {
     public List<MembershipDto> handle(ListMembersQuery query) {
         Community community = communityRepository.findById(query.communityId())
                 .orElseThrow(() -> new CommunityNotFoundException(query.communityId()));
-        // Los miembros se ven dentro de la propia universidad
         Long universityId = profiles.universityOfStudent(query.requesterId())
                 .orElseThrow(() -> new StudentProfileRequiredException(query.requesterId()));
         if (!universityId.equals(community.getUniversityId()))

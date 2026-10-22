@@ -2,7 +2,6 @@ package com.utp.quesale.communities.domain.entities;
 
 import java.time.Instant;
 
-// Publicación de un miembro dentro de una comunidad
 public class CommunityPost {
 
     private static final int CONTENT_MAX_LENGTH = 1000;
@@ -17,7 +16,6 @@ public class CommunityPost {
         this(null, communityId, authorId, content, Instant.now());
     }
 
-    // Constructor de rehidratación: lo usa solo el mapper
     public CommunityPost(Long id, Long communityId, Long authorId, String content, Instant createdAt) {
         if (communityId == null) throw new IllegalArgumentException("Community id is required");
         if (authorId == null) throw new IllegalArgumentException("Author id is required");

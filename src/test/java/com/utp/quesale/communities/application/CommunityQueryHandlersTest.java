@@ -26,7 +26,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Pruebas de los handlers de consulta: sin Spring ni base de datos
 class CommunityQueryHandlersTest {
 
     private static final Long UTP = 1L;

@@ -19,7 +19,6 @@ public class MessageJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Las relaciones JPA crean las FKs reales hacia students (D-05)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sender_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_message_sender"))

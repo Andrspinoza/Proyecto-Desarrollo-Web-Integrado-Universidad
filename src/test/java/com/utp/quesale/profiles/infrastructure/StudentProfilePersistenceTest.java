@@ -51,7 +51,6 @@ class StudentProfilePersistenceTest {
     }
 
     private void reloadFromDatabase() {
-        // Evita que las comprobaciones se limiten a la caché de JPA.
         entityManager.flush();
         entityManager.clear();
     }

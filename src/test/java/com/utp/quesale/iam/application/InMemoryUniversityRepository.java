@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-// Repositorio en memoria para probar los handlers sin base de datos
 public class InMemoryUniversityRepository implements UniversityRepository {
 
     private final Map<Long, University> store = new LinkedHashMap<>();

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-// No decide reglas: pasa el studentId del header al handler; la conexión y el bloqueo se validan allí
 @RestController
 @RequestMapping("/api/v1/messages")
 @Tag(name = "Messages", description = "Mensajes entre estudiantes conectados")

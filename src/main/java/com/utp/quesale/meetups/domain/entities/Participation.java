@@ -19,7 +19,6 @@ public class Participation {
         this(null, studentId, status, registeredAt);
     }
 
-    // Constructor de rehidratación: conserva el id de la fila de participación.
     public Participation(Long id, Long studentId, ParticipationStatus status, Instant registeredAt) {
         if (id != null && id <= 0)
             throw new IllegalArgumentException("Participation ID must be positive");

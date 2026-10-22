@@ -10,6 +10,5 @@ public interface MessageRepository {
 
     Optional<Message> findById(Long id);
 
-    // Conversación entre dos estudiantes, en cualquier sentido, del mensaje más antiguo al más reciente
     List<Message> findConversation(Long studentId, Long otherStudentId);
 }

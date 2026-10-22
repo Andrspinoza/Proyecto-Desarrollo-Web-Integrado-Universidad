@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-// No decide permisos: pasa el studentId del header al handler y el agregado decide
 @RestController
 @RequestMapping("/api/v1/communities")
 @Tag(name = "Communities", description = "Comunidades de estudiantes de una misma universidad")

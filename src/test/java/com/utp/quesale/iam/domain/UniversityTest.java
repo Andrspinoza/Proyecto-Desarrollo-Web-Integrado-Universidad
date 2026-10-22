@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Pruebas de dominio puras: sin Spring ni base de datos
 class UniversityTest {
 
     private University utp() {

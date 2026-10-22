@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-// Repositorio en memoria para probar los handlers sin base de datos
 public class InMemoryCommunityPostRepository implements CommunityPostRepository {
 
     private final List<CommunityPost> store = new ArrayList<>();
@@ -21,7 +20,6 @@ public class InMemoryCommunityPostRepository implements CommunityPostRepository 
         return saved;
     }
 
-    // Más recientes primero
     @Override
     public List<CommunityPost> findAllByCommunityId(Long communityId) {
         return store.stream()

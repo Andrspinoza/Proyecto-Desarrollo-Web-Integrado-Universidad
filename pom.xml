@@ -69,7 +69,6 @@
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Base de datos en memoria solo para las pruebas de persistencia -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

@@ -50,7 +50,6 @@ public class StudentPersistenceMapper {
             entity.setProfile(null);
         } else {
             Profile source = student.getProfile();
-            // Actualiza la entidad existente para conservar su ID y no duplicar el perfil.
             ProfileJpaEntity profile = entity.getProfile();
             if (profile == null) {
                 profile = new ProfileJpaEntity();

@@ -24,7 +24,6 @@ public class Student extends AbstractDomainAggregateRoot<Student> {
         this(null, new StudentRecordId(), universityId, email, fullName, Instant.now());
     }
 
-    // El mapper recupera la identidad y fecha originales sin generar eventos.
     public Student(Long id, StudentRecordId recordId, Long universityId,
                    String email, FullName fullName, Instant createdAt) {
         this(id, recordId, universityId, email, fullName, createdAt, null);

@@ -7,7 +7,6 @@ import com.utp.quesale.communities.domain.aggregates.Community;
 import com.utp.quesale.communities.domain.entities.CommunityPost;
 import com.utp.quesale.communities.domain.entities.Membership;
 
-// Pasa del agregado al resultado de la aplicación; no depende de HTTP
 public final class CommunitiesDtoAssembler {
 
     private CommunitiesDtoAssembler() {

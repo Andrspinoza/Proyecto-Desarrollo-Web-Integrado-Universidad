@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-// Repositorio en memoria para probar los handlers sin base de datos
 public class InMemoryCommunityRepository implements CommunityRepository {
 
     private final Map<Long, Community> store = new LinkedHashMap<>();
@@ -30,7 +29,6 @@ public class InMemoryCommunityRepository implements CommunityRepository {
         return community;
     }
 
-    // Como la base real, devuelve una copia: los cambios sin guardar no se ven en el repositorio
     @Override
     public Optional<Community> findById(Long id) {
         return Optional.ofNullable(store.get(id)).map(InMemoryCommunityRepository::copyOf);

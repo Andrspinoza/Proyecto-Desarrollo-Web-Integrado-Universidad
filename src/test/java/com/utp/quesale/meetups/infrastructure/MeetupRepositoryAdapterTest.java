@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Prueba el adapter sobre H2, incluyendo las FKs a estudiantes y universidades.
 @DataJpaTest
 @Import({MeetupRepositoryAdapter.class, MeetupPersistenceMapper.class})
 class MeetupRepositoryAdapterTest {

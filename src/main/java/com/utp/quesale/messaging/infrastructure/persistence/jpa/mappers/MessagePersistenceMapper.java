@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class MessagePersistenceMapper {
 
-    // Usa el constructor de rehidratación: nunca registra eventos
     public Message toDomain(MessageJpaEntity entity) {
         return new Message(
                 entity.getId(),

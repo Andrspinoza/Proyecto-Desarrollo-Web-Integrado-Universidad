@@ -19,7 +19,6 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Prueba el adapter sobre H2, incluyendo las FKs a universidades y estudiantes.
 @DataJpaTest
 @Import({CommunityRepositoryAdapter.class, CommunityPersistenceMapper.class})
 class CommunityRepositoryAdapterTest {

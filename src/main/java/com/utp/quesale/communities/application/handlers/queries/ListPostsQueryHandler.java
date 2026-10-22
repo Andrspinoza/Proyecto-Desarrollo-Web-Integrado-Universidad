@@ -25,7 +25,6 @@ public class ListPostsQueryHandler {
         this.postRepository = postRepository;
     }
 
-    // Solo los miembros leen las publicaciones, de la más reciente a la más antigua
     public List<CommunityPostDto> handle(ListPostsQuery query) {
         Community community = communityRepository.findById(query.communityId())
                 .orElseThrow(() -> new CommunityNotFoundException(query.communityId()));

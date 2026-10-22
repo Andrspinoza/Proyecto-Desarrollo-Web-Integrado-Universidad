@@ -43,7 +43,6 @@ class StudentRepositoryAdapterTest {
         Student original = new Student(null, new StudentRecordId(), universityId, "fernando@utp.edu.pe",
                 new FullName("Bruno Fernando", "Escobedo"), Instant.parse("2026-10-01T12:00:00Z"));
         Student saved = studentRepository.save(original);
-        // Fuerza la lectura desde H2 para no comprobar solo la caché de JPA.
         entityManager.flush();
         entityManager.clear();
 

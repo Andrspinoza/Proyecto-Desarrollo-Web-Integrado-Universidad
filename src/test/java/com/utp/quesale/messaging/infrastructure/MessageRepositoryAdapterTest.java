@@ -20,7 +20,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Prueba el adapter sobre H2; los estudiantes previos se crean directamente con el EntityManager.
 @DataJpaTest
 @Import({MessageRepositoryAdapter.class, MessagePersistenceMapper.class})
 class MessageRepositoryAdapterTest {
@@ -78,7 +77,6 @@ class MessageRepositoryAdapterTest {
 
         assertEquals(List.of("Primero", "Segundo", "Tercero"),
                 conversation.stream().map(Message::getContent).toList());
-        // Es la misma conversación se pregunte desde cualquiera de los dos lados
         assertEquals(3, messageRepository.findConversation(marco.getId(), ana.getId()).size());
     }
 

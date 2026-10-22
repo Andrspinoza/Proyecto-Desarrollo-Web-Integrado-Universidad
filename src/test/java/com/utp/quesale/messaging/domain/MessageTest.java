@@ -10,7 +10,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Pruebas de dominio puras: sin Spring ni base de datos
 class MessageTest {
 
     private static final Long SENDER_ID = 10L;

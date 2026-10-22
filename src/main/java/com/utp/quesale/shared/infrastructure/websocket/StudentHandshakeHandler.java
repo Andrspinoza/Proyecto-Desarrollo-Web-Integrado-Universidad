@@ -8,8 +8,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.security.Principal;
 import java.util.Map;
 
-// Identidad provisional del socket (D-16): el id del estudiante llega como parámetro `studentId` de la
-// conexión, igual que el header X-Student-Id de REST. Con JWT saldrá del token y esta clase desaparece.
 public class StudentHandshakeHandler extends DefaultHandshakeHandler {
 
     static final String STUDENT_ID_PARAM = "studentId";

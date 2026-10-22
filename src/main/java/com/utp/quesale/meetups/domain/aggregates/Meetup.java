@@ -63,7 +63,6 @@ public class Meetup extends AbstractDomainAggregateRoot<Meetup> {
         registerDomainEvent(new MeetupCreatedEvent(id, organizerId, Instant.now()));
     }
 
-    // Rehidrata el agregado desde persistencia sin exigir que la fecha siga en el futuro.
     public Meetup(
             Long id,
             Long organizerId,

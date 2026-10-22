@@ -16,7 +16,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// Pruebas puras: sin Spring ni base de datos
 class CommunitiesDtoAssemblerTest {
 
     private static final Instant NOW = Instant.parse("2026-10-01T12:00:00Z");

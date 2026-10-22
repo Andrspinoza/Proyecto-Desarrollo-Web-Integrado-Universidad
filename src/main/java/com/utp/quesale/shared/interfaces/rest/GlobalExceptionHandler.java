@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.Instant;
 import java.util.stream.Collectors;
 
-// Traduce las excepciones del dominio a respuestas HTTP con un formato único
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

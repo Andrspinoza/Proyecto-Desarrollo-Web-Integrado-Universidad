@@ -14,7 +14,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Pruebas del handler: sin Spring ni base de datos
 class UniversityCommandHandlerTest {
 
     private final InMemoryUniversityRepository repository = new InMemoryUniversityRepository();

@@ -38,7 +38,6 @@ public class ProfileJpaEntity {
     @Column(nullable = false, length = 10)
     private Visibility visibility;
 
-    // Los catálogos se comparten: guardar o borrar un perfil no los modifica.
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "profile_interests",
             joinColumns = @JoinColumn(name = "profile_id", nullable = false),

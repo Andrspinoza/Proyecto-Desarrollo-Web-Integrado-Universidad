@@ -15,12 +15,10 @@ public class Message extends AbstractDomainAggregateRoot<Message> {
     private final String content;
     private final Instant sentAt;
 
-    // Creación: estado inicial válido; no registra eventos porque todavía no tiene id
     public Message(Long senderId, Long recipientId, String content) {
         this(null, senderId, recipientId, content, Instant.now());
     }
 
-    // Rehidratación: la usa solo el mapper; nunca registra eventos
     public Message(Long id, Long senderId, Long recipientId, String content, Instant sentAt) {
         if (senderId == null) throw new IllegalArgumentException("Sender id is required");
         if (recipientId == null) throw new IllegalArgumentException("Recipient id is required");
@@ -33,7 +31,6 @@ public class Message extends AbstractDomainAggregateRoot<Message> {
         this.sentAt = sentAt;
     }
 
-    // Se llama después de guardar, cuando el mensaje ya tiene el id que le dio la base
     public void markAsSent() {
         if (id == null) throw new IllegalStateException("Message must be saved before marking it as sent");
         registerDomainEvent(new MessageSentEvent(id, senderId, recipientId, content, Instant.now()));

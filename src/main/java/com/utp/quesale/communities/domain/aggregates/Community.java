@@ -28,13 +28,11 @@ public class Community extends AbstractDomainAggregateRoot<Community> {
     private final Instant createdAt;
     private final List<Membership> memberships;
 
-    // Creación: el creador entra como ADMIN
     public Community(Long universityId, String name, String description, Long creatorId) {
         this(null, universityId, name, description, creatorId, Instant.now(),
                 List.of(new Membership(creatorId, MemberRole.ADMIN)));
     }
 
-    // Rehidratación: la usa solo el mapper; nunca registra eventos
     public Community(Long id, Long universityId, String name, String description, Long creatorId,
                      Instant createdAt, List<Membership> memberships) {
         if (universityId == null) throw new IllegalArgumentException("University id is required");
@@ -58,12 +56,10 @@ public class Community extends AbstractDomainAggregateRoot<Community> {
     public void leave(Long studentId) {
         Membership membership = findMembership(studentId)
                 .orElseThrow(() -> new NotMemberException(studentId));
-        // Una comunidad nunca se queda sin administrador
         if (membership.isAdmin() && adminCount() == 1) throw new LastAdminCannotLeaveException();
         memberships.remove(membership);
     }
 
-    // Solo un ADMIN nombra a otro; así el único ADMIN puede salir después de dejar un reemplazo
     public void promote(Long studentId, Long requesterId) {
         if (!isAdmin(requesterId)) throw new NotCommunityAdminException(requesterId);
         Membership current = findMembership(studentId)
@@ -79,7 +75,6 @@ public class Community extends AbstractDomainAggregateRoot<Community> {
         this.description = validDescription(description);
     }
 
-    // Solo los miembros publican; la comunidad ya debe estar guardada para tener id
     public CommunityPost publish(Long authorId, String content) {
         if (id == null) throw new IllegalStateException("Community must be saved before publishing");
         if (!isMember(authorId)) throw new NotMemberException(authorId);

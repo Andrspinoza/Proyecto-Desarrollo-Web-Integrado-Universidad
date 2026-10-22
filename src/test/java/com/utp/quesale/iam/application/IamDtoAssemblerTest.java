@@ -12,7 +12,6 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-// Pruebas puras: sin Spring ni base de datos
 class IamDtoAssemblerTest {
 
     @Test

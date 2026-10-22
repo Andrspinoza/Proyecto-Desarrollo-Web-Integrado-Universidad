@@ -2,7 +2,6 @@ package com.utp.quesale.iam.domain.valueobjects;
 
 import java.util.Locale;
 
-// Dominio de correo institucional, por ejemplo "utp.edu.pe"
 public record EmailDomain(String value) {
 
     public EmailDomain {

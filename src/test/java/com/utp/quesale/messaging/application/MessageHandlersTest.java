@@ -26,7 +26,6 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Pruebas de los handlers: sin Spring ni base de datos
 class MessageHandlersTest {
 
     private static final Long ANA = 1L;
@@ -118,7 +117,6 @@ class MessageHandlersTest {
         assertTrue(queryHandler.handle(new GetConversationQuery(MARCO, ALICIA)).isEmpty());
     }
 
-    // Repositorio en memoria: devuelve copias para no compartir el mismo objeto con el handler
     private static class InMemoryMessageRepository implements MessageRepository {
         private final List<Message> messages = new ArrayList<>();
 
@@ -175,7 +173,6 @@ class MessageHandlersTest {
         }
     }
 
-    // Una conexión o un bloqueo vale en ambos sentidos
     private static String key(Long a, Long b) {
         return Math.min(a, b) + "-" + Math.max(a, b);
     }

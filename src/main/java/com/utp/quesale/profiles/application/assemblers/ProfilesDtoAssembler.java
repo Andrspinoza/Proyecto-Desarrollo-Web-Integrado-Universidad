@@ -34,7 +34,6 @@ public final class ProfilesDtoAssembler {
         ProfileDto reducedProfile = profile == null ? null
                 : new ProfileDto(profile.getCareer().value(), profile.getCycle().value(),
                         null, null, Set.of(), Set.of());
-        // La vista reducida conserva nombre, carrera y ciclo, sin datos privados.
         return new StudentDto(student.getId(), null, null, null,
                 student.getFullName().firstName(), student.getFullName().lastName(), null, reducedProfile);
     }

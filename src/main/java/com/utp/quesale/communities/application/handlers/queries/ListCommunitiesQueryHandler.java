@@ -23,7 +23,6 @@ public class ListCommunitiesQueryHandler {
         this.profiles = profiles;
     }
 
-    // Las comunidades de la universidad del estudiante
     public List<CommunityDto> handle(ListCommunitiesQuery query) {
         Long universityId = profiles.universityOfStudent(query.studentId())
                 .orElseThrow(() -> new StudentProfileRequiredException(query.studentId()));

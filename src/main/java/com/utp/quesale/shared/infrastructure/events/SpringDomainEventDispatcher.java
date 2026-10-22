@@ -9,7 +9,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.Objects;
 
-// Adaptador del puerto: publica los eventos solo si la transacción se confirma en la base de datos
 @Component
 public class SpringDomainEventDispatcher implements DomainEventDispatcher {
 

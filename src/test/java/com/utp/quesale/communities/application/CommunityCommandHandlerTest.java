@@ -28,7 +28,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Pruebas del handler: sin Spring ni base de datos
 class CommunityCommandHandlerTest {
 
     private static final Long UTP = 1L;

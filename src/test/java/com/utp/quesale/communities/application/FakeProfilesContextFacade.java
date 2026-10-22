@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-// Fachada falsa de profiles: cada estudiante registrado tiene su universidad
 public class FakeProfilesContextFacade implements ProfilesContextFacade {
 
     private final Map<Long, Long> universityByStudent = new HashMap<>();

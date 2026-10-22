@@ -16,7 +16,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Pruebas de dominio puras: sin Spring ni base de datos
 class CommunityTest {
 
     private static final Long UNIVERSITY_ID = 1L;

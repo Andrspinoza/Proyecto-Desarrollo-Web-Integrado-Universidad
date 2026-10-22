@@ -30,7 +30,6 @@ public class University extends AbstractDomainAggregateRoot<University> {
         this.createdAt = createdAt;
     }
 
-    // Solo se aceptan correos institucionales del dominio de esta universidad
     public boolean accepts(String email) {
         if (email == null || !email.contains("@")) return false;
         String domain = email.substring(email.lastIndexOf('@') + 1).trim().toLowerCase(Locale.ROOT);

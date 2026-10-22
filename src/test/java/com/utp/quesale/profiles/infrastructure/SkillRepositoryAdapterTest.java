@@ -27,7 +27,6 @@ class SkillRepositoryAdapterTest {
     @Test
     void savesAndReadsCatalogData() {
         Skill saved = repository.save(new Skill("Programacion"));
-        // Fuerza la lectura desde H2 en lugar de usar la caché de JPA.
         entityManager.flush();
         entityManager.clear();
 

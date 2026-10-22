@@ -20,7 +20,6 @@ public class CommunityRepositoryAdapter implements CommunityRepository {
     private final CommunityPersistenceMapper mapper;
     private final EntityManager entityManager;
 
-    // Inyección de dependencias por constructor (indicación del profesor)
     public CommunityRepositoryAdapter(
             CommunityJpaRepository repository,
             CommunityPersistenceMapper mapper,

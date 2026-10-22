@@ -22,7 +22,6 @@ import com.utp.quesale.shared.domain.events.DomainEventDispatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// Solo coordina: las reglas de la comunidad viven en el agregado
 @Service
 public class CommunityCommandHandler {
 
@@ -41,7 +40,6 @@ public class CommunityCommandHandler {
 
     @Transactional
     public CommunityDto handle(CreateCommunityCommand command) {
-        // La comunidad es de la universidad de su creador
         Long universityId = universityOf(command.studentId());
         Community community = new Community(universityId, command.name(), command.description(), command.studentId());
         if (communityRepository.existsByUniversityIdAndName(universityId, community.getName()))
@@ -55,7 +53,6 @@ public class CommunityCommandHandler {
     public CommunityDto handle(UpdateCommunityCommand command) {
         Community community = findCommunity(command.communityId());
         String previousName = community.getName();
-        // El agregado valida primero que quien edita sea ADMIN
         community.update(command.name(), command.description(), command.requesterId());
         if (!community.getName().equalsIgnoreCase(previousName)
                 && communityRepository.existsByUniversityIdAndName(community.getUniversityId(), community.getName()))
@@ -68,7 +65,6 @@ public class CommunityCommandHandler {
     @Transactional
     public CommunityDto handle(JoinCommunityCommand command) {
         Community community = findCommunity(command.communityId());
-        // Solo se une quien estudia en la misma universidad de la comunidad
         if (!universityOf(command.studentId()).equals(community.getUniversityId()))
             throw new DifferentUniversityException(command.studentId(), community.getId());
         community.join(command.studentId());
@@ -80,7 +76,6 @@ public class CommunityCommandHandler {
     @Transactional
     public void handle(LeaveCommunityCommand command) {
         Community community = findCommunity(command.communityId());
-        // El agregado impide que el último ADMIN abandone la comunidad
         community.leave(command.studentId());
         events.dispatch(communityRepository.update(community));
     }
@@ -97,7 +92,6 @@ public class CommunityCommandHandler {
     @Transactional
     public CommunityPostDto handle(PublishPostCommand command) {
         Community community = findCommunity(command.communityId());
-        // El agregado exige que quien publica sea miembro
         CommunityPost post = community.publish(command.authorId(), command.content());
         return CommunitiesDtoAssembler.toDto(postRepository.save(post));
     }

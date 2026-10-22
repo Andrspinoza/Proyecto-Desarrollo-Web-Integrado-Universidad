@@ -20,7 +20,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Prueba el adapter sobre H2; la comunidad previa se guarda con su propio adapter.
 @DataJpaTest
 @Import({CommunityPostRepositoryAdapter.class, CommunityPostPersistenceMapper.class,
         CommunityRepositoryAdapter.class, CommunityPersistenceMapper.class})

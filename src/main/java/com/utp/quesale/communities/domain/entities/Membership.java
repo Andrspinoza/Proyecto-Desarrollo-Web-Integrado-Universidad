@@ -4,7 +4,6 @@ import com.utp.quesale.communities.domain.valueobjects.MemberRole;
 
 import java.time.Instant;
 
-// Entidad hija de Community: la pertenencia de un estudiante a la comunidad
 public class Membership {
 
     private Long id;
@@ -16,7 +15,6 @@ public class Membership {
         this(null, studentId, role, Instant.now());
     }
 
-    // Constructor de rehidratación: lo usa solo el mapper
     public Membership(Long id, Long studentId, MemberRole role, Instant joinedAt) {
         if (studentId == null) throw new IllegalArgumentException("Student id is required");
         if (role == null) throw new IllegalArgumentException("Member role is required");
