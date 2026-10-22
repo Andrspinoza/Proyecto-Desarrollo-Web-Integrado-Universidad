@@ -892,8 +892,9 @@ test(meetups): agregar coleccion Postman de meetups
   una `University`).
 - Colecciones en `docs/api/`, **una por contexto** para evitar conflictos:
   `quesale.postman_environment.json` (variables `baseUrl`, `studentId`),
-  `00-setup.postman_collection.json` (Ubes: crea universidad, cuentas, estudiantes e intereses
-  en orden para la demo) y `<contexto>.postman_collection.json`. Formato Postman v2.1, que
+  `00-setup.postman_collection.json` (Ubes: crea UTP y UPC, cuatro estudiantes, intereses y
+  habilidades en orden para la demo; `Account` queda fuera de esta entrega) y
+  `<contexto>.postman_collection.json`. Formato Postman v2.1, que
   Thunder Client importa directamente.
 - Cada request de error dice en su nombre qué espera, por ejemplo
   `POST meetup lleno → 409`.
@@ -1007,3 +1008,4 @@ ejecuta cuando el curso llegue a despliegue o el profesor lo pida. Responsable: 
 | 2026-10-11 | André · Claude Code | Pasa de `backend/AGENTS.md` a `docs/guia-backend.md` con rutas en la raíz; header `X-Student-Id`; controller con repositorio mientras no exista la capa de aplicación; tests H2 por adapter; alcance por agregado; `iam` del repo como ejemplo | Repos separados (D-15), indicaciones del profesor del 8 y 11-oct, límite de 32 KB de Codex |
 | 2026-10-19 | André · Claude Code | Árbol de la sección 3 y regla «Entre contextos» alineados con la capa de aplicación CQRS (`application/commands`, `queries`, `dtos`, `assemblers`, `handlers`); se quitó `application/internal` y `domain/commands`/`queries` | La sección 4 ya describía CQRS pero el árbol conservaba la estructura anterior; lo detectó el agente de Fernando |
 | 2026-10-21 | Jesús · Codex | La regla de universidad de `meetups` se valida en la capa de aplicación al solicitar, invitar y aceptar invitaciones | Feedback de André en el PR #32; `ProfilesContextFacade` ya permite aplicar la regla |
+| 2026-10-22 | Ubes · Copilot | `00-setup` prepara UTP, UPC, tres estudiantes UTP, uno UPC, intereses y habilidades; no crea cuentas | Account se recortó de esta entrega; indicación de André |

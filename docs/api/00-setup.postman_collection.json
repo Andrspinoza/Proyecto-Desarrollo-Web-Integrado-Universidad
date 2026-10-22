@@ -1,0 +1,685 @@
+{
+  "info": {
+    "_postman_id": "bc9f1972-7995-49f8-8f9d-f97f62e89589",
+    "name": "Que Sale - 00 Setup",
+    "description": "Ejecuta las peticiones en orden para preparar la demo: universidades UTP y UPC, tres estudiantes UTP y uno UPC, intereses y habilidades. Account no forma parte de esta entrega. Los IDs se guardan como variables de coleccion en los tests. Los catalogos se crean con X-Student-Id de Camila.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "utpUniversityId",
+      "value": ""
+    },
+    {
+      "key": "upcUniversityId",
+      "value": ""
+    },
+    {
+      "key": "camilaStudentId",
+      "value": ""
+    },
+    {
+      "key": "utpStudent2Id",
+      "value": ""
+    },
+    {
+      "key": "utpStudent3Id",
+      "value": ""
+    },
+    {
+      "key": "upcStudentId",
+      "value": ""
+    },
+    {
+      "key": "interestMusicId",
+      "value": ""
+    },
+    {
+      "key": "interestPhotographyId",
+      "value": ""
+    },
+    {
+      "key": "interestProgrammingId",
+      "value": ""
+    },
+    {
+      "key": "skillJavaId",
+      "value": ""
+    },
+    {
+      "key": "skillSpringBootId",
+      "value": ""
+    },
+    {
+      "key": "skillUiDesignId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Create UTP university",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Universidad Tecnologica del Peru\",\n  \"emailDomain\": \"utp.edu.pe\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/universities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "universities"
+          ]
+        },
+        "description": "Expected: 201 Created. Saves utpUniversityId for the UTP students."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('UTP university is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.emailDomain).to.eql('utp.edu.pe');",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('utpUniversityId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create UPC university",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Universidad Peruana de Ciencias Aplicadas\",\n  \"emailDomain\": \"upc.edu.pe\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/universities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "universities"
+          ]
+        },
+        "description": "Expected: 201 Created. Saves upcUniversityId for the UPC student."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('UPC university is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.emailDomain).to.eql('upc.edu.pe');",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('upcUniversityId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create Camila in UTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"universityId\": {{utpUniversityId}},\n  \"email\": \"camila.rojas@utp.edu.pe\",\n  \"firstName\": \"Camila\",\n  \"lastName\": \"Rojas\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/students",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "students"
+          ]
+        },
+        "description": "Expected: 201 Created. Saves camilaStudentId, used as X-Student-Id when creating interests and skills."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Camila is created at UTP', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.email).to.eql('camila.rojas@utp.edu.pe');",
+              "    pm.expect(body.universityId).to.eql(Number(pm.collectionVariables.get('utpUniversityId')));",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('camilaStudentId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create second UTP student",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"universityId\": {{utpUniversityId}},\n  \"email\": \"diego.torres@utp.edu.pe\",\n  \"firstName\": \"Diego\",\n  \"lastName\": \"Torres\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/students",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "students"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Second UTP student is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.email).to.eql('diego.torres@utp.edu.pe');",
+              "    pm.expect(body.universityId).to.eql(Number(pm.collectionVariables.get('utpUniversityId')));",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('utpStudent2Id', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create third UTP student",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"universityId\": {{utpUniversityId}},\n  \"email\": \"lucia.vega@utp.edu.pe\",\n  \"firstName\": \"Lucia\",\n  \"lastName\": \"Vega\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/students",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "students"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Third UTP student is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.email).to.eql('lucia.vega@utp.edu.pe');",
+              "    pm.expect(body.universityId).to.eql(Number(pm.collectionVariables.get('utpUniversityId')));",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('utpStudent3Id', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create UPC student",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"universityId\": {{upcUniversityId}},\n  \"email\": \"marco.salazar@upc.edu.pe\",\n  \"firstName\": \"Marco\",\n  \"lastName\": \"Salazar\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/students",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "students"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('UPC student is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.email).to.eql('marco.salazar@upc.edu.pe');",
+              "    pm.expect(body.universityId).to.eql(Number(pm.collectionVariables.get('upcUniversityId')));",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('upcStudentId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create interest: Music",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{camilaStudentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Musica\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/interests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "interests"
+          ]
+        },
+        "description": "Expected: 201 Created. Uses Camila's student ID in X-Student-Id."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Music interest is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.name).to.eql('Musica');",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('interestMusicId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create interest: Photography",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{camilaStudentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Fotografia\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/interests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "interests"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Photography interest is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.name).to.eql('Fotografia');",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('interestPhotographyId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create interest: Programming",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{camilaStudentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Programacion\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/interests",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "interests"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Programming interest is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.name).to.eql('Programacion');",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('interestProgrammingId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create skill: Java",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{camilaStudentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Java\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/skills",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "skills"
+          ]
+        },
+        "description": "Expected: 201 Created. Uses Camila's student ID in X-Student-Id."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Java skill is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.name).to.eql('Java');",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('skillJavaId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create skill: Spring Boot",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{camilaStudentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Spring Boot\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/skills",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "skills"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Spring Boot skill is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.name).to.eql('Spring Boot');",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('skillSpringBootId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create skill: UI Design",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{camilaStudentId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Diseno UI\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/skills",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "skills"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('UI Design skill is created', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.name).to.eql('Diseno UI');",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.collectionVariables.set('skillUiDesignId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
