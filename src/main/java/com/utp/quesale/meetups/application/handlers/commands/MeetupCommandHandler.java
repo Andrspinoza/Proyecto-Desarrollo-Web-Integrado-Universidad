@@ -95,6 +95,7 @@ public class MeetupCommandHandler {
     @Transactional
     public MeetupDto handle(RequestParticipationCommand command) {
         Meetup meetup = requireForUpdate(command.meetupId());
+        requireSameUniversity(meetup, command.studentId());
         meetup.requestParticipation(command.studentId());
         return save(meetup, true);
     }
@@ -109,6 +110,7 @@ public class MeetupCommandHandler {
     @Transactional
     public MeetupDto handle(InviteParticipantCommand command) {
         Meetup meetup = requireForUpdate(command.meetupId());
+        requireSameUniversity(meetup, command.studentId());
         meetup.invite(command.studentId(), command.requesterId());
         return save(meetup, true);
     }
@@ -116,6 +118,7 @@ public class MeetupCommandHandler {
     @Transactional
     public MeetupDto handle(AcceptInvitationCommand command) {
         Meetup meetup = requireForUpdate(command.meetupId());
+        requireSameUniversity(meetup, command.studentId());
         meetup.acceptInvitation(command.studentId());
         return save(meetup, true);
     }
@@ -137,6 +140,15 @@ public class MeetupCommandHandler {
     private Meetup requireForUpdate(Long meetupId) {
         return meetupRepository.findByIdForUpdate(meetupId)
                 .orElseThrow(() -> new MeetupNotFoundException(meetupId));
+    }
+
+    private void requireSameUniversity(Meetup meetup, Long studentId) {
+        Long studentUniversityId = profiles.universityOfStudent(studentId)
+                .orElseThrow(() -> new MeetupAccessDeniedException(
+                        "Student does not have a university profile"));
+        if (!studentUniversityId.equals(meetup.getUniversityId()))
+            throw new MeetupAccessDeniedException(
+                    "Student must belong to the meetup's university");
     }
 
     private MeetupDto save(Meetup meetup, boolean dispatchEvents) {
