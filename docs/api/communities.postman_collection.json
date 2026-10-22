@@ -1,0 +1,912 @@
+{
+  "info": {
+    "name": "Que Sale - Communities",
+    "description": "Pruebas de comunidades, miembros y publicaciones. Configura adminId, memberId y outsiderId con estudiantes existentes: adminId y memberId de la misma universidad, outsiderId sin unirse. Ejecutar en orden. X-Student-Id es provisional (D-16).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "adminId",
+      "value": "1"
+    },
+    {
+      "key": "memberId",
+      "value": "2"
+    },
+    {
+      "key": "outsiderId",
+      "value": "3"
+    },
+    {
+      "key": "communityId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "POST crear comunidad → 201",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities"
+          ]
+        },
+        "description": "Crea la comunidad en la universidad del estudiante; el creador entra como ADMIN. Guarda communityId.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ajedrez\",\n  \"description\": \"Torneos semanales\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('POST crear comunidad → 201 responde 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "if (pm.response.code === 201) {",
+              "    pm.collectionVariables.set('communityId', pm.response.json().id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST crear comunidad con nombre repetido → 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities"
+          ]
+        },
+        "description": "Ejecutar después de crear: el nombre es único por universidad.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ajedrez\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('POST crear comunidad con nombre repetido → 409 responde 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST crear comunidad sin nombre → 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities"
+          ]
+        },
+        "description": "Falla la validación del resource.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('POST crear comunidad sin nombre → 400 responde 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET listar comunidades de mi universidad → 200",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities"
+          ]
+        },
+        "description": "Solo muestra las comunidades de la universidad del estudiante."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET listar comunidades de mi universidad → 200 responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET obtener comunidad → 200",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}"
+          ]
+        },
+        "description": "Obtiene la comunidad por id."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET obtener comunidad → 200 responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET comunidad inexistente → 404",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/99999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "99999"
+          ]
+        },
+        "description": "La comunidad no existe."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET comunidad inexistente → 404 responde 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT modificar comunidad como administrador → 200",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}"
+          ]
+        },
+        "description": "Solo un ADMIN modifica la comunidad.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ajedrez\",\n  \"description\": \"Nueva descripcion\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PUT modificar comunidad como administrador → 200 responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST unirse a la comunidad → 201",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{memberId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/members",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "members"
+          ]
+        },
+        "description": "El estudiante debe ser de la misma universidad (X-Student-Id = memberId)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('POST unirse a la comunidad → 201 responde 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST unirse dos veces → 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{memberId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/members",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "members"
+          ]
+        },
+        "description": "Ya es miembro."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('POST unirse dos veces → 409 responde 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT modificar comunidad sin ser administrador → 403",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{memberId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}"
+          ]
+        },
+        "description": "Un MEMBER no puede modificar.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Intento\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PUT modificar comunidad sin ser administrador → 403 responde 403', function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET listar miembros → 200",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/members",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "members"
+          ]
+        },
+        "description": "Miembros con su rol (ADMIN o MEMBER)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET listar miembros → 200 responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE el único administrador intenta salir → 409",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/members/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "members",
+            "me"
+          ]
+        },
+        "description": "Regla de la demo: una comunidad nunca se queda sin administrador."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('DELETE el único administrador intenta salir → 409 responde 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATCH promover a un miembro como no administrador → 403",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{memberId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/members/{{memberId}}/promote",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "members",
+            "{{memberId}}",
+            "promote"
+          ]
+        },
+        "description": "Solo un ADMIN promueve."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PATCH promover a un miembro como no administrador → 403 responde 403', function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATCH promover a un miembro → 200",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/members/{{memberId}}/promote",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "members",
+            "{{memberId}}",
+            "promote"
+          ]
+        },
+        "description": "Ahora hay dos administradores."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PATCH promover a un miembro → 200 responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE salir de la comunidad como administrador con reemplazo → 204",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{adminId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/members/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "members",
+            "me"
+          ]
+        },
+        "description": "Ya puede salir porque queda otro ADMIN."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('DELETE salir de la comunidad como administrador con reemplazo → 204 responde 204', function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST publicar en la comunidad → 201",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{memberId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/posts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "posts"
+          ]
+        },
+        "description": "Solo los miembros publican.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Hola a todos\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('POST publicar en la comunidad → 201 responde 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST publicar sin ser miembro → 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{outsiderId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/posts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "posts"
+          ]
+        },
+        "description": "outsiderId es un estudiante que no se unió.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Hola\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('POST publicar sin ser miembro → 409 responde 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST publicar contenido vacío → 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{memberId}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/posts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "posts"
+          ]
+        },
+        "description": "Falla la validación del resource.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('POST publicar contenido vacío → 400 responde 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET ver publicaciones → 200",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{memberId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/posts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "posts"
+          ]
+        },
+        "description": "Las más recientes primero; solo miembros."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET ver publicaciones → 200 responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET ver publicaciones sin ser miembro → 409",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Student-Id",
+            "value": "{{outsiderId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/communities/{{communityId}}/posts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "communities",
+            "{{communityId}}",
+            "posts"
+          ]
+        },
+        "description": "Solo los miembros leen."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET ver publicaciones sin ser miembro → 409 responde 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
