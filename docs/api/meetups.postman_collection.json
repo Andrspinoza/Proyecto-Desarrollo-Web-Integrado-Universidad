@@ -1,0 +1,293 @@
+{
+  "info": {
+    "_postman_id": "a22bb8c8-9150-4e29-a036-dad408cf8c7b",
+    "name": "Que Sale - Meetups",
+    "description": "Requests manuales para crear, consultar y gestionar meetups y participaciones. Configura studentId y participantId con estudiantes existentes. La identidad es provisional y se envía mediante X-Student-Id. Para ejecutar las solicitudes se necesita la API y una implementación activa de ProfilesContextFacade.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "studentId",
+      "value": "1"
+    },
+    {
+      "key": "participantId",
+      "value": "2"
+    },
+    {
+      "key": "meetupId",
+      "value": "1"
+    },
+    {
+      "key": "scheduledAt",
+      "value": "2030-11-01T10:00:00"
+    }
+  ],
+  "item": [
+    {
+      "name": "Meetups",
+      "item": [
+        {
+          "name": "Create public meetup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Repaso de algoritmos\",\n  \"description\": \"Repaso antes del examen\",\n  \"type\": \"ACADEMIC\",\n  \"visibility\": \"PUBLIC\",\n  \"scheduledAt\": \"{{scheduledAt}}\",\n  \"place\": {\n    \"name\": \"Biblioteca\",\n    \"address\": \"Av. Universitaria 123\",\n    \"district\": \"Los Olivos\"\n  },\n  \"capacity\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/meetups",
+            "description": "Expected: 201 Created. The response Location points to the new meetup."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Meetup is created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('meetupId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List public meetups with filters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups?type=ACADEMIC&status=SCHEDULED&from=2030-11-01T00:00:00&to=2030-11-30T23:59:59",
+            "description": "Expected: 200 OK and a JSON array. Optional filters: type, status, from and to. Only public meetups from the student's university are listed."
+          }
+        },
+        {
+          "name": "List my meetups",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/mine",
+            "description": "Expected: 200 OK and a JSON array of meetups organized by, joined by or inviting the student."
+          }
+        },
+        {
+          "name": "Get meetup by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}",
+            "description": "Expected: 200 OK if visible to the student, otherwise 404 Not Found."
+          }
+        },
+        {
+          "name": "Update meetup",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Repaso de algoritmos - actualizado\",\n  \"description\": \"Traer ejercicios resueltos\",\n  \"type\": \"ACADEMIC\",\n  \"visibility\": \"PUBLIC\",\n  \"scheduledAt\": \"{{scheduledAt}}\",\n  \"place\": {\n    \"name\": \"Biblioteca central\",\n    \"address\": \"Av. Universitaria 123\",\n    \"district\": \"Los Olivos\"\n  },\n  \"capacity\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}",
+            "description": "Expected: 200 OK. Run as the meetup organizer."
+          }
+        },
+        {
+          "name": "Cancel meetup",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/cancel",
+            "description": "Expected: 200 OK. Run as the organizer, on a meetup that is not already finished."
+          }
+        },
+        {
+          "name": "Finish meetup",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/finish",
+            "description": "Expected: 200 OK. Run as the organizer, on a separate active meetup; do not run after Cancel meetup."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Participations and invitations",
+      "item": [
+        {
+          "name": "List participants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/participations",
+            "description": "Expected: 200 OK and a JSON array of visible participants."
+          }
+        },
+        {
+          "name": "Request participation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{participantId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/participations",
+            "description": "Expected: 200 OK. The student requests to join a public meetup; run with participantId different from studentId."
+          }
+        },
+        {
+          "name": "Confirm participation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/participations/{{participantId}}/confirm",
+            "description": "Expected: 200 OK. Run as the meetup organizer after Request participation."
+          }
+        },
+        {
+          "name": "Invite participant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{studentId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": {{participantId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/invitations",
+            "description": "Expected: 200 OK. Run as the organizer with a student who does not already participate."
+          }
+        },
+        {
+          "name": "Accept my invitation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{participantId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/invitations/me/accept",
+            "description": "Expected: 200 OK. Run as participantId after Invite participant."
+          }
+        },
+        {
+          "name": "Decline my invitation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{participantId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/invitations/me/decline",
+            "description": "Expected: 200 OK. Use another invitation or meetup; do not run after Accept my invitation."
+          }
+        },
+        {
+          "name": "Withdraw my participation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Student-Id",
+                "value": "{{participantId}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/meetups/{{meetupId}}/participations/me/withdraw",
+            "description": "Expected: 200 OK. Run as a participant who has joined; the organizer cannot withdraw."
+          }
+        }
+      ]
+    }
+  ]
+}

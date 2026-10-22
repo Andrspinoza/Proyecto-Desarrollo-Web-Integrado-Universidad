@@ -14,10 +14,12 @@ Solo Fernando edita este archivo, en el último commit de cada PR.
 | Contrato de fachada de profiles (B3) | ✅ En main | #19 | ProfilesContextFacade en interfaces/acl, con las tres firmas de la guía 6.3 |
 | Implementación provisional de fachada | ✅ En main | PR #21 | Bean ProfilesContextFacadeImpl y cinco pruebas; consulta estudiantes y universidades. studentIdOfAccount devuelve vacío hasta que existan Account y su vínculo con Student |
 | Afinidad y tests | ⏳ | | AffinityCalculator y AffinityScore pendientes |
-| Capa de aplicación de catálogos | En revisión | PR #24 | Commands de creación, queries de listado, DTOs, assembler y handlers de Interest y Skill; catorce pruebas unitarias de aplicación |
-| Capa de aplicación de Student y Profile | ⏳ | | Commands, queries, DTOs, assembler y handlers con sus pruebas |
-| Resources y endpoints | ⏳ | | |
+| Capa de aplicación de catálogos | ✅ En main | PR #24 | Commands de creación, queries de listado, DTOs, assembler y handlers de Interest y Skill; catorce pruebas unitarias de aplicación |
+| Creación y consulta de Student | ✅ En main | PR #33 | Commands, queries, DTOs y assembler; creación con fachada de iam y consulta por ID con visibilidad mediante connections. Diecisiete pruebas unitarias nuevas |
+| Resources y endpoints de Student | ✅ En main | PR #33 | POST /api/v1/students y GET /api/v1/students/{id}; ocho pruebas HTTP con MockMvc. Sin Account ni JWT; GET usa X-Student-Id |
+| Acciones de Profile y listado de Student | ⏳ | | Commands y query declarados; faltan handlers y endpoints de modificación del perfil y listado |
+| Endpoints de catálogos | En PR de catálogos | PR #36 | Resources, assemblers y controllers POST/GET de intereses y habilidades; diez pruebas HTTP. Creación con X-Student-Id como administrador provisional, sin validación de rol hasta Account y JWT |
 
-**Siguiente paso:** cerrar la revisión del PR #24 de la capa de aplicación de catálogos. Después de su fusión y de incorporar main, continuar con la capa de aplicación de Student y Profile siguiendo iam (B5); luego, resources y endpoints. La resolución por cuenta requiere Account y su vínculo real con Student; no se equiparan sus IDs. La afinidad sigue pendiente como bloque independiente.
+**Siguiente paso:** completar la verificación de POST/GET de ambos catálogos en Swagger y solicitar revisión del PR #36 con el seguimiento y la descripción actualizados. La suite completa, incluido ApplicationStartupTest, debe pasar. Después de su fusión y de incorporar main, generar el EER Diagram y el diccionario cuando estén todas las tablas. Las acciones de Profile, el listado y la afinidad quedan fuera de este PR. La resolución por cuenta requiere Account y su vínculo real con Student; no se equiparan sus IDs.
 
-**Última actualización:** 2026-10-20 · Fernando
+**Última actualización:** 2026-10-22 · Fernando

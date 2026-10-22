@@ -1,6 +1,9 @@
 package com.utp.quesale.meetups.application;
 
+import com.utp.quesale.meetups.application.commands.AcceptInvitationCommand;
 import com.utp.quesale.meetups.application.commands.CreateMeetupCommand;
+import com.utp.quesale.meetups.application.commands.InviteParticipantCommand;
+import com.utp.quesale.meetups.application.commands.RequestParticipationCommand;
 import com.utp.quesale.meetups.application.dtos.MeetupDto;
 import com.utp.quesale.meetups.application.dtos.ParticipationDto;
 import com.utp.quesale.meetups.application.handlers.commands.MeetupCommandHandler;
@@ -95,6 +98,38 @@ class MeetupApplicationHandlersTest {
 
         assertThrows(MeetupAccessDeniedException.class, () -> commandHandler.handle(command));
         assertEquals(0, dispatchedAggregates.get());
+    }
+
+    @Test
+    @DisplayName("Rechaza solicitar participacion si el estudiante es de otra universidad")
+    void rejectsParticipationRequestFromOtherUniversity() {
+        repository.add(meetup(6L, UNIVERSITY_ID, MeetupVisibility.PUBLIC,
+                MeetupType.SOCIAL, MeetupStatus.SCHEDULED, LocalDateTime.now().plusDays(2)));
+
+        assertThrows(MeetupAccessDeniedException.class,
+                () -> commandHandler.handle(new RequestParticipationCommand(6L, OTHER_UNIVERSITY_ID)));
+    }
+
+    @Test
+    @DisplayName("Rechaza invitar a un estudiante de otra universidad")
+    void rejectsInvitationToStudentFromOtherUniversity() {
+        repository.add(meetup(7L, UNIVERSITY_ID, MeetupVisibility.PUBLIC,
+                MeetupType.SOCIAL, MeetupStatus.SCHEDULED, LocalDateTime.now().plusDays(2)));
+
+        assertThrows(MeetupAccessDeniedException.class,
+                () -> commandHandler.handle(new InviteParticipantCommand(
+                        7L, OTHER_UNIVERSITY_ID, ORGANIZER_ID)));
+    }
+
+    @Test
+    @DisplayName("Rechaza aceptar invitacion si el estudiante es de otra universidad")
+    void rejectsInvitationAcceptanceFromOtherUniversity() {
+        Meetup meetup = privateMeetup();
+        meetup.invite(OTHER_UNIVERSITY_ID, ORGANIZER_ID);
+        repository.add(meetup);
+
+        assertThrows(MeetupAccessDeniedException.class,
+                () -> commandHandler.handle(new AcceptInvitationCommand(5L, OTHER_UNIVERSITY_ID)));
     }
 
     @Test
