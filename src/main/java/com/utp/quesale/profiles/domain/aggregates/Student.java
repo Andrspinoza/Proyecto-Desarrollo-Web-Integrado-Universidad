@@ -1,6 +1,7 @@
 package com.utp.quesale.profiles.domain.aggregates;
 
 import com.utp.quesale.profiles.domain.entities.Profile;
+import com.utp.quesale.profiles.domain.events.StudentRegisteredEvent;
 import com.utp.quesale.profiles.domain.valueobjects.Career;
 import com.utp.quesale.profiles.domain.valueobjects.StudyCycle;
 import com.utp.quesale.profiles.domain.valueobjects.Visibility;
@@ -43,6 +44,11 @@ public class Student extends AbstractDomainAggregateRoot<Student> {
         this.fullName = fullName;
         this.createdAt = createdAt;
         this.profile = profile;
+    }
+
+    public void markAsRegistered() {
+        if (id == null) throw new IllegalStateException("Student must be persisted before it is registered");
+        registerDomainEvent(new StudentRegisteredEvent(id, email, fullName.firstName(), Instant.now()));
     }
 
     public void createProfile(Career career, StudyCycle cycle, String description, Visibility visibility) {

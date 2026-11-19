@@ -36,6 +36,7 @@ public class CreateStudentCommandHandler {
         if (repository.existsByEmail(student.getEmail()))
             throw new IllegalStateException("Student email already exists: " + student.getEmail());
         Student saved = repository.save(student);
+        saved.markAsRegistered();
         events.dispatch(saved);
         return ProfilesDtoAssembler.toDto(saved);
     }

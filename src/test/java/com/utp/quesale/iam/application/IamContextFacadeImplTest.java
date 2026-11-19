@@ -1,18 +1,25 @@
 package com.utp.quesale.iam.application;
 
 import com.utp.quesale.iam.application.acl.IamContextFacadeImpl;
+import com.utp.quesale.iam.domain.aggregates.EmailVerification;
 import com.utp.quesale.iam.domain.aggregates.University;
 import com.utp.quesale.iam.domain.valueobjects.EmailDomain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IamContextFacadeImplTest {
 
+    private static final Instant NOW = Instant.parse("2026-11-18T12:00:00Z");
+
     private final InMemoryUniversityRepository universities = new InMemoryUniversityRepository();
-    private final IamContextFacadeImpl facade = new IamContextFacadeImpl(universities);
+    private final InMemoryEmailVerificationRepository verifications = new InMemoryEmailVerificationRepository();
+    private final IamContextFacadeImpl facade = new IamContextFacadeImpl(universities, verifications, false);
     private Long utpId;
 
     @BeforeEach
@@ -63,5 +70,35 @@ class IamContextFacadeImplTest {
     void rejectsAnEmailWhenTheUniversityDoesNotExist() {
         assertFalse(facade.universityAcceptsEmail(99L, "camila@utp.edu.pe"));
         assertFalse(facade.universityAcceptsEmail(null, "camila@utp.edu.pe"));
+    }
+
+    @Test
+    void studentWithoutVerificationIsNotVerified() {
+        assertFalse(facade.isEmailVerified(7L));
+        assertFalse(facade.isEmailVerified(null));
+        assertFalse(facade.isEmailVerified(0L));
+    }
+
+    @Test
+    void studentWithPendingVerificationIsNotVerified() {
+        verifications.save(EmailVerification.issue(7L, "camila@utp.edu.pe", "hash", Duration.ofHours(1), NOW));
+
+        assertFalse(facade.isEmailVerified(7L));
+    }
+
+    @Test
+    void studentWithConfirmedVerificationIsVerified() {
+        EmailVerification verification = EmailVerification.issue(7L, "camila@utp.edu.pe", "hash", Duration.ofHours(1), NOW);
+        verification.confirm(NOW.plusSeconds(5));
+        verifications.save(verification);
+
+        assertTrue(facade.isEmailVerified(7L));
+        assertFalse(facade.isEmailVerified(8L));
+    }
+
+    @Test
+    void reportsWhetherVerificationIsRequired() {
+        assertFalse(facade.isEmailVerificationRequired());
+        assertTrue(new IamContextFacadeImpl(universities, verifications, true).isEmailVerificationRequired());
     }
 }
