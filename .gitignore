@@ -30,6 +30,14 @@ nbproject/private/
 .env.*
 !.env.example
 application-local.properties
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/*.tfvars
+!infra/terraform/*.tfvars.example
+infra/ansible/inventory.ini
+infra/ansible/group_vars/all/local.yml
+infra/k8s/overlays/*/secrets.env
 
 # ── Sistema operativo ────────────────────────────────────────────────────────
 .DS_Store

@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+spec:
+  schedule: "0 8 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          nodeSelector:
+            kubernetes.io/hostname: node1
+          containers:
+            - name: backup
+              image: mysql:8.4
+              envFrom:
+                - secretRef:
+                    name: quesale-secret
+              command:
+                - sh
+                - -c
+                - >
+                  mysqldump -h mysql -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --databases quesale
+                  | gzip > /backup/quesale-$(date +%Y%m%d-%H%M).sql.gz
+                  && find /backup -name 'quesale-*.sql.gz' -mtime +7 -delete
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: backup
+              hostPath:
+                path: /var/backups/quesale
+                type: DirectoryOrCreate

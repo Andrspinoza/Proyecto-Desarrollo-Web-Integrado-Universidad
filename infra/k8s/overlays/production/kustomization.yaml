@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: quesale
+resources:
+  - ../../base
+images:
+  - name: quesale-api
+    newName: ghcr.io/andrspinoza/quesale-api
+    newTag: latest
+configMapGenerator:
+  - name: quesale-config
+    literals:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=quesale
+      - MYSQL_DATABASE=quesale
+      - MYSQL_USER=quesale
+      - SPRING_JPA_SHOW_SQL=false
+      - EMAIL_VERIFICATION_REQUIRED=true
+      - SPRING_MAIL_HOST=smtp.resend.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=resend
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+secretGenerator:
+  - name: quesale-secret
+    envs:
+      - secrets.env
