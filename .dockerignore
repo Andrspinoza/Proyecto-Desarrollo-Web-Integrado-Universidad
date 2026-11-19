@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vscode
+target
+docs
+infra
+Landing-Page-Proyecto-Desarrollo-Web-Universidad
+*.md
+.env
+.env.*
+**/application-local.properties
+compose.yaml
