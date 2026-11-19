@@ -5,7 +5,8 @@ import com.utp.quesale.iam.application.handlers.commands.EmailVerificationComman
 import com.utp.quesale.profiles.domain.events.StudentRegisteredEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
+import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,7 +20,7 @@ public class StudentRegisteredEventHandler {
         this.handler = handler;
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(StudentRegisteredEvent event) {
         try {
             handler.handle(new IssueEmailVerificationCommand(event.studentId(), event.email(), event.firstName()));
