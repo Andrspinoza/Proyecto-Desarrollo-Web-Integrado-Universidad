@@ -1,0 +1,6 @@
+domain: ""
+letsencrypt_email: ""
+deploy_public_key: ""
+turn_secret: ""
+ghcr_user: ""
+ghcr_token: ""

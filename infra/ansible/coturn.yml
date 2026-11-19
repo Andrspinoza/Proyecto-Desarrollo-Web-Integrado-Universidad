@@ -1,0 +1,37 @@
+- name: Servidor TURN para las llamadas
+  hosts: k3s_servers[0]
+  become: true
+  tasks:
+    - name: Validar el secreto de TURN
+      ansible.builtin.assert:
+        that:
+          - turn_secret is defined
+          - turn_secret | length > 0
+        fail_msg: Falta turn_secret en group_vars/all/local.yml
+
+    - name: Instalar coturn
+      ansible.builtin.apt:
+        name: coturn
+        state: present
+        update_cache: true
+
+    - name: Configuración de coturn
+      ansible.builtin.template:
+        src: turnserver.conf.j2
+        dest: /etc/turnserver.conf
+        owner: root
+        group: turnserver
+        mode: "0640"
+      notify: Reiniciar coturn
+
+    - name: Activar coturn
+      ansible.builtin.service:
+        name: coturn
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reiniciar coturn
+      ansible.builtin.service:
+        name: coturn
+        state: restarted

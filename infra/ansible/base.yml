@@ -1,0 +1,103 @@
+- name: Base de los nodos
+  hosts: k3s_servers
+  become: true
+  tasks:
+    - name: Validar variables obligatorias
+      ansible.builtin.assert:
+        that:
+          - domain is defined and domain | length > 0
+          - letsencrypt_email is defined and letsencrypt_email | length > 0
+          - deploy_public_key is defined and deploy_public_key | length > 0
+          - turn_secret is defined and turn_secret | length > 0
+          - ghcr_user is defined and ghcr_user | length > 0
+          - ghcr_token is defined and ghcr_token | length > 0
+        fail_msg: Falta group_vars/all/local.yml o tiene valores vacíos; genéralo con infra/scripts/preparar.sh
+
+    - name: Nombre del equipo
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: Paquetes base
+      ansible.builtin.apt:
+        name:
+          - curl
+          - ufw
+          - wireguard
+          - ca-certificates
+          - fail2ban
+        state: present
+        update_cache: true
+
+    - name: Reenvío de paquetes en UFW
+      ansible.builtin.lineinfile:
+        path: /etc/default/ufw
+        regexp: '^DEFAULT_FORWARD_POLICY='
+        line: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
+
+    - name: Reglas de UFW
+      ansible.builtin.command: "ufw {{ item }}"
+      loop:
+        - allow 22/tcp
+        - allow 80/tcp
+        - allow 443/tcp
+        - "allow {{ wg_port }}/udp"
+        - allow 3478/tcp
+        - allow 3478/udp
+        - "allow {{ turn_min_port }}:{{ turn_max_port }}/udp"
+        - allow in on wg0
+        - "allow from {{ wg_subnet }}"
+        - "allow from {{ pod_cidr }}"
+        - "allow from {{ service_cidr }}"
+      changed_when: false
+
+    - name: Política por defecto de UFW
+      ansible.builtin.command: ufw default deny incoming
+      changed_when: false
+
+    - name: Activar UFW
+      ansible.builtin.command: ufw --force enable
+      changed_when: false
+
+    - name: Usuario de despliegue
+      ansible.builtin.user:
+        name: "{{ deploy_user }}"
+        shell: /bin/bash
+        create_home: true
+
+    - name: Directorio SSH del usuario de despliegue
+      ansible.builtin.file:
+        path: "/home/{{ deploy_user }}/.ssh"
+        state: directory
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_user }}"
+        mode: "0700"
+
+    - name: Llave del usuario de despliegue
+      ansible.builtin.copy:
+        content: "{{ deploy_public_key }}\n"
+        dest: "/home/{{ deploy_user }}/.ssh/authorized_keys"
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_user }}"
+        mode: "0600"
+
+    - name: Permiso de kubectl para el usuario de despliegue
+      ansible.builtin.copy:
+        content: "{{ deploy_user }} ALL=(root) NOPASSWD: /usr/local/bin/k3s kubectl *\n"
+        dest: "/etc/sudoers.d/{{ deploy_user }}"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: visudo -cf %s
+
+    - name: Sin contraseñas por SSH
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: PasswordAuthentication no
+      notify: Reiniciar SSH
+
+  handlers:
+    - name: Reiniciar SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

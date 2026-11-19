@@ -1,0 +1,69 @@
+- name: Llaves de WireGuard
+  hosts: k3s_servers
+  become: true
+  tasks:
+    - name: Directorio de WireGuard
+      ansible.builtin.file:
+        path: /etc/wireguard
+        state: directory
+        mode: "0700"
+
+    - name: Llave privada
+      ansible.builtin.shell: umask 077 && wg genkey > /etc/wireguard/private.key
+      args:
+        creates: /etc/wireguard/private.key
+
+    - name: Llave pública
+      ansible.builtin.shell: wg pubkey < /etc/wireguard/private.key > /etc/wireguard/public.key
+      args:
+        creates: /etc/wireguard/public.key
+
+    - name: Leer llave privada
+      ansible.builtin.slurp:
+        src: /etc/wireguard/private.key
+      register: wg_private
+
+    - name: Leer llave pública
+      ansible.builtin.slurp:
+        src: /etc/wireguard/public.key
+      register: wg_public
+
+    - name: Guardar llaves como variables
+      ansible.builtin.set_fact:
+        wg_private_key: "{{ wg_private.content | b64decode | trim }}"
+        wg_public_key: "{{ wg_public.content | b64decode | trim }}"
+
+- name: Red privada entre nodos
+  hosts: k3s_servers
+  become: true
+  tasks:
+    - name: Configuración de wg0
+      ansible.builtin.template:
+        src: wg0.conf.j2
+        dest: /etc/wireguard/wg0.conf
+        mode: "0600"
+      notify: Reiniciar WireGuard
+
+    - name: Activar wg0
+      ansible.builtin.service:
+        name: wg-quick@wg0
+        state: started
+        enabled: true
+
+    - name: Aplicar reinicios pendientes
+      ansible.builtin.meta: flush_handlers
+
+    - name: Comprobar conexión con los otros nodos
+      ansible.builtin.command: "ping -c 1 -W 2 {{ hostvars[item].wg_ip }}"
+      loop: "{{ groups['k3s_servers'] | difference([inventory_hostname]) }}"
+      register: wg_ping
+      retries: 5
+      delay: 3
+      until: wg_ping.rc == 0
+      changed_when: false
+
+  handlers:
+    - name: Reiniciar WireGuard
+      ansible.builtin.service:
+        name: wg-quick@wg0
+        state: restarted

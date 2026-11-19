@@ -1,0 +1,9 @@
+deploy_user: deploy
+k3s_version: v1.30.5+k3s1
+cert_manager_version: v1.15.3
+turn_min_port: 49160
+turn_max_port: 49200
+wg_port: 51820
+wg_subnet: 10.10.0.0/24
+pod_cidr: 10.42.0.0/16
+service_cidr: 10.43.0.0/16

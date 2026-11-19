@@ -1,0 +1,50 @@
+- name: Primer nodo del clúster
+  hosts: k3s_servers[0]
+  become: true
+  tasks:
+    - name: Instalar K3s con etcd embebido
+      ansible.builtin.shell: >
+        curl -sfL https://get.k3s.io |
+        INSTALL_K3S_VERSION={{ k3s_version }}
+        sh -s - server --cluster-init
+        --node-ip {{ wg_ip }}
+        --advertise-address {{ wg_ip }}
+        --flannel-iface wg0
+        --tls-san {{ ansible_host }}
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Esperar a que el nodo esté listo
+      ansible.builtin.command: /usr/local/bin/k3s kubectl wait --for=condition=Ready node/{{ inventory_hostname }} --timeout=180s
+      changed_when: false
+
+    - name: Leer el token del clúster
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/token
+      register: k3s_token_file
+
+    - name: Guardar el token
+      ansible.builtin.set_fact:
+        k3s_token: "{{ k3s_token_file.content | b64decode | trim }}"
+
+- name: Resto de nodos del clúster
+  hosts: k3s_servers[1:]
+  become: true
+  serial: 1
+  tasks:
+    - name: Unir el nodo al clúster
+      ansible.builtin.shell: >
+        curl -sfL https://get.k3s.io |
+        INSTALL_K3S_VERSION={{ k3s_version }}
+        sh -s - server
+        --server https://{{ hostvars[groups['k3s_servers'][0]].wg_ip }}:6443
+        --token {{ hostvars[groups['k3s_servers'][0]].k3s_token }}
+        --node-ip {{ wg_ip }}
+        --advertise-address {{ wg_ip }}
+        --flannel-iface wg0
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Esperar a que el nodo esté listo
+      ansible.builtin.command: /usr/local/bin/k3s kubectl wait --for=condition=Ready node/{{ inventory_hostname }} --timeout=240s
+      changed_when: false
