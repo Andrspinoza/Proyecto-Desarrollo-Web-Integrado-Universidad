@@ -1,0 +1,11 @@
+contabo_client_id     = ""
+contabo_client_secret = ""
+contabo_user          = ""
+contabo_password      = ""
+ssh_public_key        = ""
+root_password         = ""
+image_id              = ""
+existing_instance_ids = []
+domain                = ""
+cloudflare_api_token  = ""
+cloudflare_zone_id    = ""
