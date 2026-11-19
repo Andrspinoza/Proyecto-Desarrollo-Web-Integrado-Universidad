@@ -63,8 +63,9 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
                 } else if (StompCommand.SEND.equals(headers.getCommand()) || StompCommand.SUBSCRIBE.equals(headers.getCommand())) {
                     if (headers.getUser() == null) throw new IllegalArgumentException("Unauthorized websocket");
                     String destination = headers.getDestination();
-                    if (destination == null || (StompCommand.SUBSCRIBE.equals(headers.getCommand()) && !destination.startsWith("/user/queue/"))
-                            || (StompCommand.SEND.equals(headers.getCommand()) && !destination.startsWith("/app/")))
+                    if (destination == null || (StompCommand.SUBSCRIBE.equals(headers.getCommand())
+                            && !destination.matches("/user/queue/(messages|notifications|matches|calls|errors)"))
+                            || (StompCommand.SEND.equals(headers.getCommand()) && !destination.equals("/app/calls/signal")))
                         throw new IllegalArgumentException("Forbidden destination");
                 }
                 return message;

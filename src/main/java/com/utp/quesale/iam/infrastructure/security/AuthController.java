@@ -2,7 +2,9 @@ package com.utp.quesale.iam.infrastructure.security;
 
 import com.utp.quesale.iam.interfaces.acl.IamContextFacade;
 import com.utp.quesale.iam.application.commands.ResendEmailVerificationCommand;
+import com.utp.quesale.iam.application.commands.IssueEmailVerificationCommand;
 import com.utp.quesale.iam.application.handlers.commands.EmailVerificationCommandHandler;
+import com.utp.quesale.iam.domain.repositories.EmailVerificationRepository;
 import com.utp.quesale.profiles.application.commands.CreateStudentCommand;
 import com.utp.quesale.profiles.application.handlers.commands.CreateStudentCommandHandler;
 import jakarta.validation.Valid;
@@ -22,11 +24,14 @@ public class AuthController {
     private final IamContextFacade iam;
     private final JwtService jwt;
     private final EmailVerificationCommandHandler verification;
+    private final EmailVerificationRepository verificationRepository;
     private final BCryptPasswordEncoder passwords = new BCryptPasswordEncoder();
     private final String dummyHash = passwords.encode("dummy-password-not-a-valid-account");
     public AuthController(AccountJpaRepository accounts, CreateStudentCommandHandler students,
-                          IamContextFacade iam, JwtService jwt, EmailVerificationCommandHandler verification) {
+                          IamContextFacade iam, JwtService jwt, EmailVerificationCommandHandler verification,
+                          EmailVerificationRepository verificationRepository) {
         this.accounts = accounts; this.students = students; this.iam = iam; this.jwt = jwt; this.verification = verification;
+        this.verificationRepository = verificationRepository;
     }
     public record Registration(@NotNull @Positive Long universityId, @NotBlank @Email @Size(max=120) String email,
                                @NotBlank @Size(min=8,max=72) String password,
@@ -57,7 +62,11 @@ public class AuthController {
     @PostMapping("/resend-verification") @ResponseStatus(HttpStatus.ACCEPTED)
     public void resend(@Valid @RequestBody Login body) {
         var account = accounts.findByEmailIgnoreCase(body.email().trim()).orElse(null);
-        if (account != null && passwords.matches(body.password(), account.getPasswordHash()) && !iam.isEmailVerified(account.getStudentId()))
-            verification.handle(new ResendEmailVerificationCommand(account.getStudentId()));
+        if (account != null && passwords.matches(body.password(), account.getPasswordHash()) && !iam.isEmailVerified(account.getStudentId())) {
+            if (verificationRepository.findLatestByStudentId(account.getStudentId()).isPresent())
+                verification.handle(new ResendEmailVerificationCommand(account.getStudentId()));
+            else
+                verification.handle(new IssueEmailVerificationCommand(account.getStudentId(), account.getEmail(), account.getEmail().split("@", 2)[0]));
+        }
     }
 }
