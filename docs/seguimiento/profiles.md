@@ -13,7 +13,7 @@ Solo Fernando edita este archivo, en el último commit de cada PR.
 | Persistencia de perfil y tests H2 | ✅ En main | #14 | ProfileJpaEntity, relación con Student, mapper y adapter para el perfil completo; seis pruebas H2 adicionales |
 | Contrato de fachada de profiles (B3) | ✅ En main | #19 | ProfilesContextFacade en interfaces/acl, con las tres firmas de la guía 6.3 |
 | Implementación provisional de fachada | ✅ En main | PR #21 | Bean ProfilesContextFacadeImpl y cinco pruebas; consulta estudiantes y universidades. studentIdOfAccount devuelve vacío hasta que existan Account y su vínculo con Student |
-| Afinidad y tests | ⏳ | | AffinityCalculator y AffinityScore pendientes |
+| Afinidad y recomendaciones | ✅ | #53 | `AffinityCalculator` (8 puntos por interés en común hasta 5, 2 por habilidad, 25 misma carrera, hasta 15 por ciclo cercano, 10 misma sede) y `GET /students/recommendations`; la afinidad ordena, no es un match |
 | Capa de aplicación de catálogos | ✅ En main | PR #24 | Commands de creación, queries de listado, DTOs, assembler y handlers de Interest y Skill; catorce pruebas unitarias de aplicación |
 | Creación y consulta de Student | ✅ En main | PR #33 | Commands, queries, DTOs y assembler; creación con fachada de iam y consulta por ID con visibilidad mediante connections. Diecisiete pruebas unitarias nuevas |
 | Resources y endpoints de Student | ✅ En main | PR #33 | POST /api/v1/students y GET /api/v1/students/{id}; ocho pruebas HTTP con MockMvc. Sin Account ni JWT; GET usa X-Student-Id |
@@ -22,6 +22,6 @@ Solo Fernando edita este archivo, en el último commit de cada PR.
 | Foto de perfil | ✅ | #52 | `PUT /students/me/photo` (JPEG, PNG o WebP de hasta 1 MB, tipo verificado por los bytes), `DELETE` y `GET /photos/{clave}` pública con clave aleatoria; se guarda en la base (tabla `student_photos`) y sale en `photoUrl` |
 | Endpoints de catálogos | En PR de catálogos | PR #36 | Resources, assemblers y controllers POST/GET de intereses y habilidades; diez pruebas HTTP. Creación con X-Student-Id como administrador provisional, sin validación de rol hasta Account y JWT |
 
-**Siguiente paso:** recomendaciones con afinidad (`AffinityCalculator`: intereses en común, misma carrera, ciclo cercano, misma sede) en PR aparte
+**Siguiente paso:** paginar el listado de estudiantes (hoy se filtra en memoria) y validar el cálculo con datos reales
 
 **Última actualización:** 2026-11-20 · André
