@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿Qué sale? · Prueba del aviso de match</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.3rem; }
+    fieldset { margin: 1rem 0; border: 1px solid #ccc; border-radius: 8px; }
+    label { display: block; margin: .4rem 0 .15rem; font-size: .9rem; }
+    input { width: 100%; box-sizing: border-box; font: inherit; padding: .4rem .6rem; }
+    button { font: inherit; padding: .4rem .8rem; margin: .5rem .4rem 0 0; cursor: pointer; }
+    #estado { font-weight: 600; }
+    #log { list-style: none; padding: 0; }
+    #log li { padding: .4rem .6rem; margin: .3rem 0; border-radius: 6px; background: #f3f3f3; font-size: .9rem; }
+    #log li.recibido { background: #e7f6ea; }
+    #log li.error { background: #fdeaea; }
+    #fondo { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, .45); align-items: center; justify-content: center; z-index: 10; }
+    #tarjeta { background: #fff; border-radius: 16px; padding: 2rem 2.2rem; text-align: center; max-width: 340px; box-shadow: 0 12px 40px rgba(0, 0, 0, .25); animation: aparecer .35s ease-out; }
+    #tarjeta h2 { margin: 0 0 .4rem; font-size: 1.5rem; color: #E8590C; }
+    #tarjeta p { margin: .3rem 0 1rem; }
+    #tarjeta button { margin: .2rem; }
+    @keyframes aparecer { from { transform: scale(.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  </style>
+</head>
+<body>
+  <h1>Prueba del aviso de match</h1>
+  <p>Abre esta página con un estudiante, conéctalo y, desde Swagger o Postman, acepta una solicitud de conexión dirigida a él o hecha por él.
+     Cuando se acepta, <strong>los dos</strong> reciben el aviso al instante. La identidad sale del token JWT del inicio de sesión.</p>
+
+  <fieldset>
+    <legend>Conectarse</legend>
+    <label for="email">Correo institucional</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="clave">Contraseña</label>
+    <input id="clave" type="password" autocomplete="current-password">
+    <button id="conectar">Conectar</button>
+    <button id="desconectar" disabled>Desconectar</button>
+    <p>Estado: <span id="estado">desconectado</span></p>
+  </fieldset>
+
+  <h2>Avisos</h2>
+  <ul id="log"></ul>
+
+  <div id="fondo" role="dialog" aria-modal="true" aria-labelledby="titulo">
+    <div id="tarjeta">
+      <h2 id="titulo">¡Hicieron match!</h2>
+      <p id="detalle"></p>
+      <button id="enviarMensaje">Enviar un mensaje</button>
+      <button id="cerrar">Seguir explorando</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let client = null;
+    let ultimo = null;
+
+    function anotar(texto, clase) {
+      const li = document.createElement('li');
+      if (clase) li.className = clase;
+      li.textContent = texto;
+      $('log').prepend(li);
+    }
+
+    function mostrarMatch(m) {
+      ultimo = m;
+      const nombre = m.matchedFirstName || `el estudiante ${m.matchedStudentId}`;
+      $('detalle').textContent = `Tú y ${nombre} ya pueden conversar.`;
+      $('fondo').style.display = 'flex';
+    }
+
+    function cerrar() {
+      $('fondo').style.display = 'none';
+    }
+
+    $('cerrar').addEventListener('click', cerrar);
+    $('enviarMensaje').addEventListener('click', () => {
+      anotar(`Abrir el chat con el estudiante ${ultimo.matchedStudentId} (conexión ${ultimo.connectionId})`);
+      cerrar();
+    });
+
+    async function iniciarSesion() {
+      const r = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: $('email').value, password: $('clave').value })
+      });
+      if (!r.ok) throw new Error(`Inicio de sesión rechazado (${r.status})`);
+      return r.json();
+    }
+
+    $('conectar').addEventListener('click', async () => {
+      if (typeof StompJs === 'undefined') {
+        anotar('No se cargó stomp.js desde internet. Revisa tu conexión y recarga la página.', 'error');
+        return;
+      }
+      if (location.protocol === 'file:') {
+        anotar('Abre esta página desde la API (http://localhost:8080/match-test.html), no como archivo.', 'error');
+        return;
+      }
+      let sesion;
+      try {
+        sesion = await iniciarSesion();
+      } catch (error) {
+        anotar(error.message, 'error');
+        return;
+      }
+      const id = sesion.studentId;
+      const protocolo = location.protocol === 'https:' ? 'wss' : 'ws';
+      client = new StompJs.Client({
+        brokerURL: `${protocolo}://${location.host}/ws`,
+        connectHeaders: { Authorization: `Bearer ${sesion.accessToken}` },
+        reconnectDelay: 0,
+        onConnect: () => {
+          $('estado').textContent = `conectado como estudiante ${id}`;
+          $('conectar').disabled = true;
+          $('desconectar').disabled = false;
+          client.subscribe('/user/queue/matches', (frame) => {
+            const m = JSON.parse(frame.body);
+            anotar(`Match con ${m.matchedFirstName || m.matchedStudentId} (conexión ${m.connectionId}, ${m.matchedAt})`, 'recibido');
+            mostrarMatch(m);
+          });
+        },
+        onWebSocketClose: () => {
+          $('estado').textContent = 'desconectado';
+          $('conectar').disabled = false;
+          $('desconectar').disabled = true;
+        },
+        onStompError: (frame) => anotar(`Error STOMP: ${frame.headers.message}`, 'error')
+      });
+      client.activate();
+    });
+
+    $('desconectar').addEventListener('click', () => client && client.deactivate());
+  </script>
+</body>
+</html>
