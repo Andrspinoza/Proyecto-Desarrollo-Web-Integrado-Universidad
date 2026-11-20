@@ -15,6 +15,7 @@ public class AccountEntity {
     public AccountEntity(String email, String passwordHash, Long studentId) {
         this.email = email; this.passwordHash = passwordHash; this.studentId = studentId;
     }
+    public void changePasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public String getPasswordHash() { return passwordHash; }
     public String getEmail() { return email; }
     public Long getStudentId() { return studentId; }
