@@ -16,7 +16,9 @@ Solo André edita este archivo, en el último commit de cada PR.
 | Verificación de correo: aplicación | 🔨 | #41 | Emitir, confirmar y reenviar (espera de 60 s); se emite al recibir `StudentRegisteredEvent`; fachada con `isEmailVerified` |
 | Verificación de correo: persistencia y SMTP | 🔨 | #41 | Tabla `email_verifications` con FK a `students`; envío por SMTP o, sin SMTP, el enlace va al log |
 | Verificación de correo: endpoints y filtro | 🔨 | #41 | `confirm`, `resend` y `status`; con `EMAIL_VERIFICATION_REQUIRED=true` responde 403 a quien no verificó |
+| Autenticación JWT | ✅ | #42 | Registro con BCrypt, `login`, filtro HTTP y autorización STOMP (D-22) |
+| Límite de intentos de autenticación | ✅ | #45 | 30 solicitudes cada 5 min por dirección y 8 fallos por correo en 15 min (429) |
 
-**Siguiente paso:** configurar Resend en producción (`infra/README.md`). Después: llamadas (`calls`) y aviso de match (`notifications`) en PR aparte. `Account` (cuenta con contraseña cifrada) queda para después si hay tiempo
+**Siguiente paso:** pruebas de punta a punta del registro con correo real (Brevo) y límites con varias réplicas si se escala la API (hoy el contador vive en memoria)
 
 **Última actualización:** 2026-11-19 · André
