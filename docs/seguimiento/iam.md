@@ -18,6 +18,8 @@ Solo André edita este archivo, en el último commit de cada PR.
 | Verificación de correo: endpoints y filtro | 🔨 | #41 | `confirm`, `resend` y `status`; con `EMAIL_VERIFICATION_REQUIRED=true` responde 403 a quien no verificó |
 | Autenticación JWT | ✅ | #42 | Registro con BCrypt, `login`, filtro HTTP y autorización STOMP (D-22) |
 | Límite de intentos de autenticación | ✅ | #45 | 30 solicitudes cada 5 min por dirección y 8 fallos por correo en 15 min (429) |
+| Olvidé mi contraseña | ✅ | #50 | `POST /auth/forgot-password` (202 exista o no la cuenta) y `POST /auth/reset-password`; token de un solo uso, solo se guarda su hash, vence en 1 h; el enlace apunta a `/restablecer` de la web app |
+| Catálogo de universidades | ✅ | #49 | UTP, UPC, UTEC, Ulima, USIL, UPN y PUCP, un dominio de correo por universidad; sembrado con `SEED_UNIVERSITIES=true` |
 
 **Siguiente paso:** pruebas de punta a punta del registro con correo real (Brevo) y límites con varias réplicas si se escala la API (hoy el contador vive en memoria)
 
