@@ -16,12 +16,12 @@ Se actualiza en cada fusión a `main`. Última actualización: 2026-10-22.
 | B4 | Eventos de dominio de `connections` y `meetups` | Ubes, Jesús | ✅ | `messaging` |
 | B5 | Capa de aplicación de `iam` (CQRS) y clase base pura en `shared` | André | ✅ | La capa de aplicación de todos |
 | B6 | `Message` mínimo con `MessageSentEvent` | Mafer | ✅ | El WebSocket |
-| B7 | WebSocket: configuración STOMP, manejador del evento y `/chat-test.html` | André | ✅ | Chat en tiempo real |
+| B7 | WebSocket: configuración STOMP, manejador del evento | André | ✅ | Chat en tiempo real |
 
 ## Qué hay en `main` (22-oct)
 
 Endpoints vivos: `universities`, `students`, `interests`, `skills`, `connections`, `blocks`, `reports`, `communities` y
-`meetups` (con participaciones e invitaciones). Además, el WebSocket `/ws` y la página `/chat-test.html`. La colección
+`meetups` (con participaciones e invitaciones). Además, el WebSocket `/ws`. La colección
 Postman `docs/api/00-setup.postman_collection.json` prepara los datos de prueba (se corre **una sola vez con la base
 vacía**). Modelos para copiar: `iam`, `moderation` y `connections` (persistencia, aplicación, controllers y pruebas HTTP).
 
