@@ -149,7 +149,7 @@ Estados: ✅ decidida · 🟡 propuesta, se puede cambiar · ❓ pendiente · �
 | D-06 | ✅ | **Swagger** (springdoc) como tecnología nueva propuesta; pruebas también en Postman y Thunder Client | Documenta y prueba la API en el navegador |
 | D-07 | ✅ | Pull Requests fusionados con **«Create a merge commit»**, nunca *squash* | *Squash* aplasta los commits progresivos en uno solo |
 | D-08 | ✅ | **Sin línea `Co-Authored-By` de IA** en los commits | El historial muestra solo a los integrantes |
-| D-09 | ✅ | Producción en **AWS (Ubuntu)**; Contabo o DigitalOcean como staging opcional | Diagrama del profesor |
+| D-09 | ⛔ | ~~Producción en **AWS (Ubuntu)**; Contabo o DigitalOcean como staging opcional~~ — reemplazada por D-20 | Diagrama del profesor |
 | D-10 | 🟡 | Tablero Kanban con issues de GitHub, si alcanza el tiempo | Buena práctica, no bloquea |
 | D-11 | ⛔ | ~~Monorepo `backend/` + `frontend/`~~ — reemplazada por D-15 | El profesor pidió repos separados |
 | D-12 | ✅ | Código en inglés; comentarios, commits y documentación en español | El código del profesor está en inglés |
@@ -158,6 +158,10 @@ Estados: ✅ decidida · 🟡 propuesta, se puede cambiar · ❓ pendiente · �
 | D-15 | ✅ | **Repos separados**: este repo es solo la API, con el proyecto Maven **en la raíz**; el frontend va en otro repo | Indicación del profesor |
 | D-16 | 🟡 | Identidad provisional por header **`X-Student-Id`** hasta ver Spring Security + JWT | Permite probar endpoints sin login ni `Account` |
 | D-17 | ✅ | **Chat en tiempo real por WebSocket (STOMP)**: REST envía y guarda, el WebSocket entrega al instante. Detalle en la guía, 8.6 | Un chat no puede entregar con retraso; es requisito del producto |
+| D-18 | ✅ | **Verificación de correo al registrarse** en `iam`: `POST /students` emite un token (solo se guarda su hash, vence a las 24 h) y envía el enlace por SMTP. Con `EMAIL_VERIFICATION_REQUIRED=true` un estudiante sin verificar recibe 403 fuera de registro, perfil, catálogos y verificación | Solo alumnos reales con acceso a su correo institucional; es requisito del producto |
+| D-19 | ✅ | **Llamadas de voz y video con WebRTC** en el contexto `calls`: el WebSocket solo intercambia las señales entre estudiantes con conexión aceptada y sin bloqueo; el medio va directo o por TURN (coturn) con credenciales temporales. No se guarda historial de llamadas | Reutiliza el WebSocket de D-17; el audio y el video no pasan por la API |
+| D-21 | ✅ | **Aviso de match en tiempo real** en el contexto `notifications`: al aceptarse una conexión (`ConnectionAcceptedEvent`) los dos estudiantes reciben por WebSocket, en `/user/queue/matches`, quién es su match, para mostrar un pop-up. No se guarda el aviso: solo lo ve quien está conectado | Reutiliza el WebSocket de D-17; el match es la solicitud aceptada |
+| D-20 | ✅ | **Despliegue**: 3 VPS de Contabo con K3s (etcd embebido) sobre WireGuard, creadas con Terraform, configuradas con Ansible y publicadas con GitHub Actions (imagen en GHCR). Reemplaza el hosting de D-09 | Presupuesto del equipo y lo visto en el bootcamp de Tecsup |
 
 **Cómo cambia una decisión:** no se borra. Su fila pasa a ⛔ «reemplazada por D-NN», se
 agrega la fila nueva y se anota en el Registro de cambios (sección 15). Si una decisión no está
@@ -170,7 +174,7 @@ archivos puntero cuentan.
 
 | Integrante | Rama | Contextos | Transversal |
 |---|---|---|---|
-| **André Espinoza** | `dev-qa/andre` | `shared`, `iam`, `subscriptions` | Tech Lead: andamiaje, revisión de todos los PR, configuración del repo |
+| **André Espinoza** | `dev-qa/andre` | `shared`, `iam`, `calls`, `notifications`, `subscriptions` | Tech Lead: andamiaje, revisión de todos los PR, configuración del repo, `infra/` y workflows |
 | **Jesús Fernando Espinoza** | `dev/jesus` | `meetups` | — |
 | **Bruno Fernando Escobedo** (Fernando) | `dev/fernando` | `profiles` | MySQL, EER Diagram de Workbench, diccionario de datos, despliegue |
 | **María Fernanda Licas** (Mafer) | `dev/mafer` | `communities`, `messaging` | Guion de exposición |
@@ -486,3 +490,4 @@ Se llena después de cada revisión. Cada observación genera una tarea o un cam
 | 2026-10-15 | André · Claude Code | Reglas para partir el trabajo en PR («Punto de PR») y archivos `docs/seguimiento/<modulo>.md` | Los agentes no sabían dónde cortar un PR y el avance solo constaba en commits y PR, ilegibles sin `gh` |
 | 2026-10-21 | André · Claude Code | Lista «Antes de abrir el PR: errores frecuentes» en la sección 6 y recordatorio en la plantilla de PR de listar todos los commits | Errores repetidos en los PR del equipo (commits que no compilan solos, descripciones desactualizadas, seguimiento sin número de PR, plantilla incompleta) |
 | 2026-10-21 | André · Claude Code | Punto 11 de «Antes de abrir el PR»: `ApplicationStartupTest` arranca la aplicación completa en `./mvnw test` | `main` quedó sin arrancar por una fachada sin implementación (PR #28) y los tests con repositorios falsos no lo detectaron |
+| 2026-11-18 | André | D-18 (verificación de correo), D-19 (llamadas WebRTC), D-20 (despliegue en Contabo con K3s; reemplaza el hosting de D-09) y D-21 (aviso de match). `IamContextFacade` suma `isEmailVerified` e `isEmailVerificationRequired`; `ProfilesContextFacade` suma `firstNameOfStudent`; `Student` emite `StudentRegisteredEvent` | Requisitos del producto para el APF3 y despliegue del equipo |
