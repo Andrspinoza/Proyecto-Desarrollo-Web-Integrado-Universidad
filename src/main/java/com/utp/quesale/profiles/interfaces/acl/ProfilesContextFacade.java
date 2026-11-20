@@ -8,4 +8,8 @@ public interface ProfilesContextFacade {
     Optional<Long> studentIdOfAccount(Long accountId);
 
     Optional<Long> universityOfStudent(Long studentId);
+
+    default Optional<String> firstNameOfStudent(Long studentId) {
+        return Optional.empty();
+    }
 }

@@ -30,4 +30,10 @@ public class ProfilesContextFacadeImpl implements ProfilesContextFacade {
         if (studentId == null || studentId <= 0) return Optional.empty();
         return students.findById(studentId).map(Student::getUniversityId);
     }
+
+    @Override
+    public Optional<String> firstNameOfStudent(Long studentId) {
+        if (studentId == null || studentId <= 0) return Optional.empty();
+        return students.findById(studentId).map(student -> student.getFullName().firstName());
+    }
 }

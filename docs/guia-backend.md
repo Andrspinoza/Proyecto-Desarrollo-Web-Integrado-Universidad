@@ -987,16 +987,17 @@ defendida, y explica el recorrido por las cuatro capas.
 
 ---
 
-## 13. Despliegue (D-09)
+## 13. Despliegue (D-20)
 
-| Entorno | Rol |
+| Pieza | Herramienta |
 |---|---|
-| **AWS (Ubuntu)** | Producción final: `.jar` con Tomcat embebido y MySQL |
-| Contabo o DigitalOcean (VPS, verificar precio) | Staging opcional |
+| 3 VPS en Contabo y DNS en Cloudflare | Terraform (`infra/terraform`) |
+| Llaves, contraseñas y archivos locales | `infra/scripts/preparar.sh`; el despliegue completo con `infra/scripts/desplegar.sh` |
+| Firewall, WireGuard, K3s, cert-manager y coturn | Ansible (`infra/ansible`) |
+| API y MySQL en el clúster | Kustomize (`infra/k8s`) |
+| Pruebas, imagen en GHCR y despliegue | GitHub Actions (`.github/workflows`) |
 
-En cualquier VPS Ubuntu: Java 21, MySQL 8, `./mvnw clean package`, el `.jar` como servicio
-`systemd`, firewall (`ufw` o security groups en AWS) y credenciales en variables de entorno. Se
-ejecuta cuando el curso llegue a despliegue o el profesor lo pida. Responsable: Fernando.
+Los pasos y los límites conocidos están en `infra/README.md`. Responsable: André.
 
 ---
 
