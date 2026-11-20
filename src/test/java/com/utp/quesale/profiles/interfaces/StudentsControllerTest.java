@@ -3,6 +3,7 @@ package com.utp.quesale.profiles.interfaces;
 import com.utp.quesale.iam.interfaces.acl.IamContextFacade;
 import com.utp.quesale.profiles.application.handlers.commands.CreateStudentCommandHandler;
 import com.utp.quesale.profiles.application.handlers.commands.UpsertProfileCommandHandler;
+import com.utp.quesale.profiles.application.handlers.queries.GetStudentPhotoQueryHandler;
 import com.utp.quesale.profiles.application.handlers.queries.GetStudentQueryHandler;
 import com.utp.quesale.profiles.domain.aggregates.Student;
 import com.utp.quesale.profiles.domain.repositories.StudentRepository;
@@ -48,7 +49,8 @@ class StudentsControllerTest {
         StudentsController controller = new StudentsController(
                 new CreateStudentCommandHandler(repository, iam, aggregate -> { }),
                 new GetStudentQueryHandler(repository, (viewer, student) -> false),
-                new UpsertProfileCommandHandler(repository, Clock.fixed(Instant.parse("2026-11-20T12:00:00Z"), ZoneOffset.UTC)));
+                new UpsertProfileCommandHandler(repository, Clock.fixed(Instant.parse("2026-11-20T12:00:00Z"), ZoneOffset.UTC)),
+                new GetStudentPhotoQueryHandler(new com.utp.quesale.profiles.interfaces.MemoryPhotos()));
         mvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
