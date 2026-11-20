@@ -1,11 +1,13 @@
 package com.utp.quesale.profiles.infrastructure.persistence.jpa.entities;
 
+import com.utp.quesale.profiles.domain.valueobjects.Gender;
 import com.utp.quesale.profiles.domain.valueobjects.Visibility;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -37,6 +39,16 @@ public class ProfileJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private Visibility visibility;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 12)
+    private Gender gender;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
+    @Column(length = 60)
+    private String campus;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "profile_interests",

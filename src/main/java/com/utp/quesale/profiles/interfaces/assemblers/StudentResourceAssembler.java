@@ -17,7 +17,8 @@ public class StudentResourceAssembler {
         ProfileDto profile = dto.profile();
         ProfileResource profileResource = profile == null ? null
                 : new ProfileResource(profile.career(), profile.cycle(), profile.description(),
-                        profile.visibility(), profile.interestIds(), profile.skillIds());
+                        profile.visibility(), profile.interestIds(), profile.skillIds(),
+                        profile.gender(), profile.age(), profile.campus(), profile.birthDate());
         return new StudentResource(dto.id(), dto.recordId(), dto.universityId(), dto.email(),
                 dto.firstName(), dto.lastName(), dto.createdAt(), profileResource);
     }

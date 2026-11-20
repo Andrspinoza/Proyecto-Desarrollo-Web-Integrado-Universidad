@@ -2,6 +2,7 @@ package com.utp.quesale.profiles.interfaces;
 
 import com.utp.quesale.iam.interfaces.acl.IamContextFacade;
 import com.utp.quesale.profiles.application.handlers.commands.CreateStudentCommandHandler;
+import com.utp.quesale.profiles.application.handlers.commands.UpsertProfileCommandHandler;
 import com.utp.quesale.profiles.application.handlers.queries.GetStudentQueryHandler;
 import com.utp.quesale.profiles.domain.aggregates.Student;
 import com.utp.quesale.profiles.domain.repositories.StudentRepository;
@@ -14,6 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +47,8 @@ class StudentsControllerTest {
         };
         StudentsController controller = new StudentsController(
                 new CreateStudentCommandHandler(repository, iam, aggregate -> { }),
-                new GetStudentQueryHandler(repository, (viewer, student) -> false));
+                new GetStudentQueryHandler(repository, (viewer, student) -> false),
+                new UpsertProfileCommandHandler(repository, Clock.fixed(Instant.parse("2026-11-20T12:00:00Z"), ZoneOffset.UTC)));
         mvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
@@ -125,6 +133,67 @@ class StudentsControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.profile.description").value("Privado"))
                 .andExpect(jsonPath("$.profile.interestIds[0]").value(9));
+    }
+
+    private static int expectedAge() {
+        return Period.between(LocalDate.of(2003, 5, 10), LocalDate.now(ZoneId.of("America/Lima"))).getYears();
+    }
+
+    private static final String PROFILE = """
+            {"career":"Ingenieria de Sistemas","cycle":7,"description":"Cafe y voley","visibility":"PUBLIC",
+             "gender":"FEMALE","birthDate":"2003-05-10","campus":"Lima Centro","interestIds":[],"skillIds":[]}
+            """;
+
+    @Test
+    void savesTheProfileAndShowsAgeAndBirthDateOnlyToTheOwner() throws Exception {
+        mvc.perform(post("/api/v1/students").contentType(MediaType.APPLICATION_JSON).content(VALID)).andExpect(status().isCreated());
+        mvc.perform(put("/api/v1/students/me/profile").header("X-Student-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON).content(PROFILE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profile.career").value("Ingenieria de Sistemas"))
+                .andExpect(jsonPath("$.profile.gender").value("FEMALE"))
+                .andExpect(jsonPath("$.profile.age").value(expectedAge()))
+                .andExpect(jsonPath("$.profile.campus").value("Lima Centro"))
+                .andExpect(jsonPath("$.profile.birthDate").value("2003-05-10"));
+        mvc.perform(get("/api/v1/students/me").header("X-Student-Id", 1))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.profile.birthDate").value("2003-05-10"));
+        mvc.perform(get("/api/v1/students/1").header("X-Student-Id", 2))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profile.age").value(expectedAge()))
+                .andExpect(jsonPath("$.profile.campus").value("Lima Centro"))
+                .andExpect(jsonPath("$.profile.birthDate").doesNotExist());
+    }
+
+    @Test
+    void updatingTheProfileAgainReplacesTheValues() throws Exception {
+        mvc.perform(post("/api/v1/students").contentType(MediaType.APPLICATION_JSON).content(VALID)).andExpect(status().isCreated());
+        mvc.perform(put("/api/v1/students/me/profile").header("X-Student-Id", 1)
+                .contentType(MediaType.APPLICATION_JSON).content(PROFILE)).andExpect(status().isOk());
+        mvc.perform(put("/api/v1/students/me/profile").header("X-Student-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(PROFILE.replace("Lima Centro", "Lima Norte").replace("FEMALE", "UNDISCLOSED")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profile.campus").value("Lima Norte"))
+                .andExpect(jsonPath("$.profile.gender").value("UNDISCLOSED"));
+    }
+
+    @Test
+    void invalidProfilesAreRejected() throws Exception {
+        mvc.perform(post("/api/v1/students").contentType(MediaType.APPLICATION_JSON).content(VALID)).andExpect(status().isCreated());
+        for (String body : List.of(
+                PROFILE.replace("\"cycle\":7", "\"cycle\":11"),
+                PROFILE.replace("2003-05-10", "2015-05-10"),
+                PROFILE.replace("2003-05-10", "2999-01-01"),
+                PROFILE.replace("\"career\":\"Ingenieria de Sistemas\"", "\"career\":\"\""),
+                PROFILE.replace("\"PUBLIC\"", "null")))
+            mvc.perform(put("/api/v1/students/me/profile").header("X-Student-Id", 1)
+                    .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void savingTheProfileOfAnUnknownStudentReturns404() throws Exception {
+        mvc.perform(put("/api/v1/students/me/profile").header("X-Student-Id", 99)
+                .contentType(MediaType.APPLICATION_JSON).content(PROFILE)).andExpect(status().isNotFound());
     }
 
     private static class MemoryStudents implements StudentRepository {

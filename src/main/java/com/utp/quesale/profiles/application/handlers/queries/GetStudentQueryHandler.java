@@ -27,8 +27,8 @@ public class GetStudentQueryHandler {
             throw new IllegalArgumentException("Student and viewer ids must be positive");
         Student student = repository.findById(query.studentId())
                 .orElseThrow(() -> new StudentNotFoundException(query.studentId()));
-        if (student.getId().equals(query.viewerStudentId()) || student.isVisibleTo(query.viewerStudentId(), false))
-            return ProfilesDtoAssembler.toDto(student);
+        if (student.getId().equals(query.viewerStudentId())) return ProfilesDtoAssembler.toOwnDto(student);
+        if (student.isVisibleTo(query.viewerStudentId(), false)) return ProfilesDtoAssembler.toDto(student);
         boolean connected = student.getProfile() != null
                 && connections.areConnected(query.viewerStudentId(), student.getId());
         return student.isVisibleTo(query.viewerStudentId(), connected)

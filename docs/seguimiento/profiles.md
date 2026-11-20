@@ -17,9 +17,10 @@ Solo Fernando edita este archivo, en el último commit de cada PR.
 | Capa de aplicación de catálogos | ✅ En main | PR #24 | Commands de creación, queries de listado, DTOs, assembler y handlers de Interest y Skill; catorce pruebas unitarias de aplicación |
 | Creación y consulta de Student | ✅ En main | PR #33 | Commands, queries, DTOs y assembler; creación con fachada de iam y consulta por ID con visibilidad mediante connections. Diecisiete pruebas unitarias nuevas |
 | Resources y endpoints de Student | ✅ En main | PR #33 | POST /api/v1/students y GET /api/v1/students/{id}; ocho pruebas HTTP con MockMvc. Sin Account ni JWT; GET usa X-Student-Id |
-| Acciones de Profile y listado de Student | ⏳ | | Commands y query declarados; faltan handlers y endpoints de modificación del perfil y listado |
+| Guardar y consultar mi perfil | ✅ | #51 | `GET /students/me` y `PUT /students/me/profile`: carrera, ciclo, sede, género, fecha de nacimiento (se publica solo la edad), visibilidad, intereses y habilidades |
+| Sembrado de catálogos | ✅ | #51 | 25 intereses y 10 habilidades con `SEED_UNIVERSITIES=true` |
 | Endpoints de catálogos | En PR de catálogos | PR #36 | Resources, assemblers y controllers POST/GET de intereses y habilidades; diez pruebas HTTP. Creación con X-Student-Id como administrador provisional, sin validación de rol hasta Account y JWT |
 
-**Siguiente paso:** completar la verificación de POST/GET de ambos catálogos en Swagger y solicitar revisión del PR #36 con el seguimiento y la descripción actualizados. La suite completa, incluido ApplicationStartupTest, debe pasar. Después de su fusión y de incorporar main, generar el EER Diagram y el diccionario cuando estén todas las tablas. Las acciones de Profile, el listado y la afinidad quedan fuera de este PR. La resolución por cuenta requiere Account y su vínculo real con Student; no se equiparan sus IDs.
+**Siguiente paso:** foto de perfil y recomendaciones con afinidad (`AffinityCalculator`) en PR aparte
 
-**Última actualización:** 2026-10-22 · Fernando
+**Última actualización:** 2026-11-20 · André

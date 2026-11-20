@@ -1,9 +1,12 @@
 package com.utp.quesale.profiles.domain.entities;
 
 import com.utp.quesale.profiles.domain.valueobjects.Career;
+import com.utp.quesale.profiles.domain.valueobjects.Gender;
 import com.utp.quesale.profiles.domain.valueobjects.StudyCycle;
 import com.utp.quesale.profiles.domain.valueobjects.Visibility;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -16,6 +19,9 @@ public class Profile {
     private StudyCycle cycle;
     private String description;
     private Visibility visibility;
+    private Gender gender = Gender.UNDISCLOSED;
+    private LocalDate birthDate;
+    private String campus;
     private final Set<Long> interestIds;
     private final Set<Long> skillIds;
 
@@ -40,6 +46,41 @@ public class Profile {
         this.cycle = cycle;
         this.description = description;
         this.visibility = visibility;
+    }
+
+    public void updateDetails(Gender gender, LocalDate birthDate, String campus, LocalDate today) {
+        if (birthDate != null) {
+            if (!birthDate.isBefore(today)) throw new IllegalArgumentException("Birth date must be in the past");
+            int age = Period.between(birthDate, today).getYears();
+            if (age < 16 || age > 100) throw new IllegalArgumentException("Age must be between 16 and 100");
+        }
+        if (campus != null && campus.strip().length() > 60)
+            throw new IllegalArgumentException("Campus must be at most 60 characters");
+        this.gender = gender == null ? Gender.UNDISCLOSED : gender;
+        this.birthDate = birthDate;
+        this.campus = campus == null || campus.isBlank() ? null : campus.strip();
+    }
+
+    public void restoreDetails(Gender gender, LocalDate birthDate, String campus) {
+        this.gender = gender == null ? Gender.UNDISCLOSED : gender;
+        this.birthDate = birthDate;
+        this.campus = campus;
+    }
+
+    public Integer ageOn(LocalDate today) {
+        return birthDate == null ? null : Period.between(birthDate, today).getYears();
+    }
+
+    public void replaceInterests(Collection<Long> ids) {
+        Set<Long> valid = validIds(ids);
+        interestIds.clear();
+        interestIds.addAll(valid);
+    }
+
+    public void replaceSkills(Collection<Long> ids) {
+        Set<Long> valid = validIds(ids);
+        skillIds.clear();
+        skillIds.addAll(valid);
     }
 
     public void addInterest(Long interestId) { addId(interestIds, interestId); }
@@ -73,6 +114,9 @@ public class Profile {
     public StudyCycle getCycle() { return cycle; }
     public String getDescription() { return description; }
     public Visibility getVisibility() { return visibility; }
+    public Gender getGender() { return gender; }
+    public LocalDate getBirthDate() { return birthDate; }
+    public String getCampus() { return campus; }
     public Set<Long> getInterestIds() { return Collections.unmodifiableSet(interestIds); }
     public Set<Long> getSkillIds() { return Collections.unmodifiableSet(skillIds); }
 }
