@@ -9,9 +9,13 @@ import com.utp.quesale.profiles.domain.entities.Profile;
 import com.utp.quesale.profiles.domain.aggregates.Interest;
 import com.utp.quesale.profiles.domain.aggregates.Skill;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Set;
 
 public final class ProfilesDtoAssembler {
+    private static final ZoneId LIMA = ZoneId.of("America/Lima");
+
     private ProfilesDtoAssembler() {
     }
 
@@ -26,7 +30,13 @@ public final class ProfilesDtoAssembler {
     public static StudentDto toDto(Student student) {
         return new StudentDto(student.getId(), student.getRecordId().studentRecordId(),
                 student.getUniversityId(), student.getEmail(), student.getFullName().firstName(),
-                student.getFullName().lastName(), student.getCreatedAt(), toDto(student.getProfile()));
+                student.getFullName().lastName(), student.getCreatedAt(), toDto(student.getProfile(), false));
+    }
+
+    public static StudentDto toOwnDto(Student student) {
+        return new StudentDto(student.getId(), student.getRecordId().studentRecordId(),
+                student.getUniversityId(), student.getEmail(), student.getFullName().firstName(),
+                student.getFullName().lastName(), student.getCreatedAt(), toDto(student.getProfile(), true));
     }
 
     public static StudentDto toReducedDto(Student student) {
@@ -38,9 +48,12 @@ public final class ProfilesDtoAssembler {
                 student.getFullName().firstName(), student.getFullName().lastName(), null, reducedProfile);
     }
 
-    private static ProfileDto toDto(Profile profile) {
+    private static ProfileDto toDto(Profile profile, boolean includeBirthDate) {
         if (profile == null) return null;
+        LocalDate today = LocalDate.now(LIMA);
         return new ProfileDto(profile.getCareer().value(), profile.getCycle().value(),
-                profile.getDescription(), profile.getVisibility(), profile.getInterestIds(), profile.getSkillIds());
+                profile.getDescription(), profile.getVisibility(), profile.getInterestIds(), profile.getSkillIds(),
+                profile.getGender(), profile.ageOn(today), profile.getCampus(),
+                includeBirthDate ? profile.getBirthDate() : null);
     }
 }
