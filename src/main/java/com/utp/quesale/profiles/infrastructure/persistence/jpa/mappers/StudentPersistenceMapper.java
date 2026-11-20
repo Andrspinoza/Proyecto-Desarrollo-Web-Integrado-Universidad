@@ -59,6 +59,9 @@ public class StudentPersistenceMapper {
             profile.setCycle(source.getCycle().value());
             profile.setDescription(source.getDescription());
             profile.setVisibility(source.getVisibility());
+            profile.setGender(source.getGender());
+            profile.setBirthDate(source.getBirthDate());
+            profile.setCampus(source.getCampus());
             profile.getInterests().clear();
             profile.getInterests().addAll(interests);
             profile.getSkills().clear();
@@ -69,9 +72,11 @@ public class StudentPersistenceMapper {
 
     private Profile toProfile(ProfileJpaEntity entity) {
         if (entity == null) return null;
-        return new Profile(new Career(entity.getCareer()), new StudyCycle(entity.getCycle()),
+        Profile profile = new Profile(new Career(entity.getCareer()), new StudyCycle(entity.getCycle()),
                 entity.getDescription(), entity.getVisibility(),
                 entity.getInterests().stream().map(InterestJpaEntity::getId).toList(),
                 entity.getSkills().stream().map(SkillJpaEntity::getId).toList());
+        profile.restoreDetails(entity.getGender(), entity.getBirthDate(), entity.getCampus());
+        return profile;
     }
 }
