@@ -112,8 +112,8 @@ commits progresivos. El profesor revisa quién contribuyó y qué puede explicar
 persistencia con test H2, escribes su capa de aplicación copiando `iam`, y el controller pasa a
 usar los handlers. Se agrega sin tocar el dominio ni la persistencia.
 
-**¿Cómo sé quién hace la petición si no hay login?** Header `X-Student-Id` con el id del
-estudiante (D-16). JWT llegará cuando el profesor lo enseñe.
+**¿Cómo sé quién hace la petición?** Con JWT (D-22): `POST /api/v1/auth/login` devuelve el token y
+se manda como `Authorization: Bearer`. El servidor reemplaza `X-Student-Id` por el sujeto del token.
 
 **¿Qué hago antes de cada commit?** `./mvnw -q compile` y, si hay tests, `./mvnw test`. Luego
 `git add` archivo por archivo (sección 6).
@@ -156,11 +156,12 @@ Estados: ✅ decidida · 🟡 propuesta, se puede cambiar · ❓ pendiente · �
 | D-13 | ✅ | La fachada de `subscriptions` solo **informa límites** del plan; cada contexto cuenta su propio uso | Ningún contexto lee tablas de otro |
 | D-14 | ✅ | Cada adapter tiene un test `@DataJpaTest` sobre **H2** en memoria; los tests de dominio son JUnit puro | Indicación del profesor: probar la persistencia sin MySQL |
 | D-15 | ✅ | **Repos separados**: este repo es solo la API, con el proyecto Maven **en la raíz**; el frontend va en otro repo | Indicación del profesor |
-| D-16 | 🟡 | Identidad provisional por header **`X-Student-Id`** hasta ver Spring Security + JWT | Permite probar endpoints sin login ni `Account` |
+| D-16 | ⛔ | ~~Identidad provisional por header `X-Student-Id`~~ — reemplazada por D-22 | Permitía probar sin login |
 | D-17 | ✅ | **Chat en tiempo real por WebSocket (STOMP)**: REST envía y guarda, el WebSocket entrega al instante. Detalle en la guía, 8.6 | Un chat no puede entregar con retraso; es requisito del producto |
 | D-18 | ✅ | **Verificación de correo al registrarse** en `iam`: `POST /students` emite un token (solo se guarda su hash, vence a las 24 h) y envía el enlace por SMTP. Con `EMAIL_VERIFICATION_REQUIRED=true` un estudiante sin verificar recibe 403 fuera de registro, perfil, catálogos y verificación | Solo alumnos reales con acceso a su correo institucional; es requisito del producto |
 | D-19 | ✅ | **Llamadas de voz y video con WebRTC** en el contexto `calls`: el WebSocket solo intercambia las señales entre estudiantes con conexión aceptada y sin bloqueo; el medio va directo o por TURN (coturn) con credenciales temporales. No se guarda historial de llamadas | Reutiliza el WebSocket de D-17; el audio y el video no pasan por la API |
 | D-21 | ✅ | **Aviso de match en tiempo real** en el contexto `notifications`: al aceptarse una conexión (`ConnectionAcceptedEvent`) los dos estudiantes reciben por WebSocket, en `/user/queue/matches`, quién es su match, para mostrar un pop-up. No se guarda el aviso: solo lo ve quien está conectado | Reutiliza el WebSocket de D-17; el match es la solicitud aceptada |
+| D-22 | ✅ | **Autenticación JWT (HS256, 1 h)** en `iam`: registro con contraseña BCrypt, `POST /api/v1/auth/login` solo con correo verificado, filtro HTTP que toma la identidad del token y autorización STOMP en `CONNECT`. `JWT_SECRET` (≥ 32 bytes) es obligatorio; `AUTH_ENABLED=false` solo para pruebas heredadas. Reemplaza D-16 | PR #42; el frontend separado consume la API con token |
 | D-20 | ✅ | **Despliegue**: 3 VPS de Contabo con K3s (etcd embebido) sobre WireGuard, creadas con Terraform, configuradas con Ansible y publicadas con GitHub Actions (imagen en GHCR). Reemplaza el hosting de D-09 | Presupuesto del equipo y lo visto en el bootcamp de Tecsup |
 
 **Cómo cambia una decisión:** no se borra. Su fila pasa a ⛔ «reemplazada por D-NN», se
@@ -379,7 +380,7 @@ crear, obtener y listar → una o dos acciones clave.
 | **Jue 15-oct, 4 p. m.** | **Avance** ante el profesor (base: lo que le gustó de la demo). En clase enseña la **capa de aplicación** |
 | Vie 16 – Mié 21 | Persistencia con test H2 de todos los agregados, endpoints, capa de aplicación según el profesor, colecciones Postman, EER Diagram y diccionario |
 | **Jue 22-oct (semana 11)** | **Entrega APF2 (20%)** — tag `v0.2.0` |
-| Cuando lo enseñe | Spring Security + JWT reemplaza `X-Student-Id` (D-16) |
+| Hecho (19-nov) | JWT reemplaza `X-Student-Id` (D-22) |
 | Semana 11 en adelante | Frontend Angular + SCSS en su propio repositorio (D-15) |
 
 ---
@@ -491,3 +492,4 @@ Se llena después de cada revisión. Cada observación genera una tarea o un cam
 | 2026-10-21 | André · Claude Code | Lista «Antes de abrir el PR: errores frecuentes» en la sección 6 y recordatorio en la plantilla de PR de listar todos los commits | Errores repetidos en los PR del equipo (commits que no compilan solos, descripciones desactualizadas, seguimiento sin número de PR, plantilla incompleta) |
 | 2026-10-21 | André · Claude Code | Punto 11 de «Antes de abrir el PR»: `ApplicationStartupTest` arranca la aplicación completa en `./mvnw test` | `main` quedó sin arrancar por una fachada sin implementación (PR #28) y los tests con repositorios falsos no lo detectaron |
 | 2026-11-18 | André | D-18 (verificación de correo), D-19 (llamadas WebRTC), D-20 (despliegue en Contabo con K3s; reemplaza el hosting de D-09) y D-21 (aviso de match). `IamContextFacade` suma `isEmailVerified` e `isEmailVerificationRequired`; `ProfilesContextFacade` suma `firstNameOfStudent`; `Student` emite `StudentRegisteredEvent` | Requisitos del producto para el APF3 y despliegue del equipo |
+| 2026-11-19 | André | D-16 reemplazada por D-22 (JWT): login, filtro HTTP y autorización STOMP; páginas de prueba con inicio de sesión | PR #42 fusionado; `calls` y `notifications` sobre JWT |
