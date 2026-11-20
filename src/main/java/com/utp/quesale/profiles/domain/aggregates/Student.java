@@ -3,6 +3,7 @@ package com.utp.quesale.profiles.domain.aggregates;
 import com.utp.quesale.profiles.domain.entities.Profile;
 import com.utp.quesale.profiles.domain.events.StudentRegisteredEvent;
 import com.utp.quesale.profiles.domain.valueobjects.Career;
+import com.utp.quesale.profiles.domain.valueobjects.Gender;
 import com.utp.quesale.profiles.domain.valueobjects.StudyCycle;
 import com.utp.quesale.profiles.domain.valueobjects.Visibility;
 import com.utp.quesale.profiles.domain.valueobjects.FullName;
@@ -10,6 +11,8 @@ import com.utp.quesale.profiles.domain.valueobjects.StudentRecordId;
 import com.utp.quesale.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Locale;
 
 public class Student extends AbstractDomainAggregateRoot<Student> {
@@ -58,6 +61,16 @@ public class Student extends AbstractDomainAggregateRoot<Student> {
 
     public void updateProfile(Career career, StudyCycle cycle, String description, Visibility visibility) {
         requireProfile().update(career, cycle, description, visibility);
+    }
+
+    public void saveProfile(Career career, StudyCycle cycle, String description, Visibility visibility,
+                            Gender gender, LocalDate birthDate, String campus,
+                            Collection<Long> interestIds, Collection<Long> skillIds, LocalDate today) {
+        if (profile == null) createProfile(career, cycle, description, visibility);
+        else updateProfile(career, cycle, description, visibility);
+        profile.updateDetails(gender, birthDate, campus, today);
+        profile.replaceInterests(interestIds);
+        profile.replaceSkills(skillIds);
     }
 
     public void addInterest(Long interestId) { requireProfile().addInterest(interestId); }
