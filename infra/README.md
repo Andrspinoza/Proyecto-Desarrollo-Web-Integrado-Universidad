@@ -1,5 +1,33 @@
 # Despliegue de ¿Qué sale?
 
+> **Producción actual (19-nov-2026).** Corre en Docker sobre la VPS 1, no en K3s. El flujo `preparar.sh` + `desplegar.sh` de más abajo describe el diseño a futuro con Terraform y K3s y **no debe ejecutarse contra las VPS actuales**: Terraform reinstalaría los servidores. Este bloque describe lo que realmente corre.
+
+```text
+Navegador → Cloudflare (HTTPS) → túnel cloudflared (VPS 1) → Nginx 127.0.0.1:8091 → API 127.0.0.1:8081 → MySQL (red docker quesale-jwt-stage)
+```
+
+| Pieza | Dónde | Detalle |
+|---|---|---|
+| Frontend | `/opt/quesale-preview-20261119/html` | Lo publica el CD del repo del frontend por `rrsync` |
+| Nginx | contenedor `quesale-jwt-stage-frontend` | `infra/nginx/quesale-web.conf`: frontend, `/api`, `/ws`, Swagger y las páginas `*-test.html`. El archivo está montado: tras editarlo hay que **reiniciar** el contenedor, no solo recargar |
+| API | contenedor `quesale-jwt-stage-api` | Jar por SHA en `/opt/quesale-releases`, entorno en `/etc/quesale/api.env` (no está en git) |
+| MySQL | contenedor `quesale-jwt-stage-mysql` | Volumen de Docker; sin alta disponibilidad |
+| Despliegue | `infra/deploy/quesale-deploy-api.sh` | Se instala como `/usr/local/sbin/quesale-deploy-api` y es el único comando permitido a la llave del CD (usuario `quesale-deploy`) |
+
+### Cómo despliega el CD del backend
+
+`cd.yml` compila el jar y lo envía por SSH con `deploy <sha> <sha256>`. El script verifica la suma, respalda MySQL en `/var/backups/quesale/pre-<sha>.sql.gz`, reinicia la API con el jar nuevo y espera `GET /api/v1/universities` = 200 hasta 3 minutos. Si no responde, vuelve al jar anterior y termina con error. Después el workflow comprueba `PUBLIC_URL`.
+
+Secretos del repo: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`; variable `PUBLIC_URL`. La imagen de GHCR se publica con las etiquetas `sha-<commit>`, `latest` y `X.Y.Z` (al empujar un tag `vX.Y.Z`), pero hoy no se usa para desplegar.
+
+### Qué no cubre
+
+- La rama de datos: un despliegue que cambie el esquema no se revierte con el jar; el respaldo previo permite restaurar a mano.
+- Un solo servidor y una sola base. K3s en los tres nodos existe pero no aloja la aplicación.
+- No hay entorno de staging separado todavía.
+
+---
+
 Clúster K3s de tres nodos en Contabo. Terraform administra las VPS y el DNS de Cloudflare, Ansible configura los servidores y GitHub Actions publica cada versión.
 
 ```text
