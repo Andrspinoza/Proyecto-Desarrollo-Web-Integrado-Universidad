@@ -22,12 +22,14 @@
 <body>
   <h1>Prueba del chat en tiempo real</h1>
   <p>Abre esta página en dos pestañas con estudiantes distintos. REST guarda el mensaje y el WebSocket lo entrega al instante.
-     Identidad provisional: el id del estudiante (D-16).</p>
+     La identidad sale del token JWT del inicio de sesión.</p>
 
   <fieldset>
     <legend>1. Conectarse (recibir)</legend>
-    <label for="studentId">Mi id de estudiante</label>
-    <input id="studentId" type="number" min="1" value="1">
+    <label for="email">Correo institucional</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="clave">Contraseña</label>
+    <input id="clave" type="password" autocomplete="current-password">
     <button id="conectar">Conectar</button>
     <button id="desconectar" disabled>Desconectar</button>
     <p>Estado: <span id="estado">desconectado</span></p>
@@ -49,6 +51,17 @@
   <script>
     const $ = (id) => document.getElementById(id);
     let client = null;
+    let token = null;
+
+    async function iniciarSesion() {
+      const r = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: $('email').value, password: $('clave').value })
+      });
+      if (!r.ok) throw new Error(`Inicio de sesión rechazado (${r.status})`);
+      return r.json();
+    }
 
     function anotar(texto, clase) {
       const li = document.createElement('li');
@@ -57,7 +70,7 @@
       $('log').prepend(li);
     }
 
-    $('conectar').addEventListener('click', () => {
+    $('conectar').addEventListener('click', async () => {
       if (typeof StompJs === 'undefined') {
         anotar('No se cargó stomp.js desde internet (sin conexión o bloqueado por el navegador). Revisa tu conexión y recarga la página.', 'error');
         return;
@@ -66,12 +79,21 @@
         anotar('Abre esta página desde la API (http://localhost:8080/chat-test.html), no como archivo.', 'error');
         return;
       }
-      const id = $('studentId').value;
+      let sesion;
+      try {
+        sesion = await iniciarSesion();
+      } catch (error) {
+        anotar(error.message, 'error');
+        return;
+      }
+      token = sesion.accessToken;
+      const id = sesion.studentId;
       const protocolo = location.protocol === 'https:' ? 'wss' : 'ws';
-      const url = `${protocolo}://${location.host}/ws?studentId=${encodeURIComponent(id)}`;
+      const url = `${protocolo}://${location.host}/ws`;
       let conectado = false;
       client = new StompJs.Client({
         brokerURL: url,
+        connectHeaders: { Authorization: `Bearer ${token}` },
         reconnectDelay: 0,
         onConnect: () => {
           conectado = true;
@@ -101,7 +123,7 @@
       try {
         const respuesta = await fetch('/api/v1/messages', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Student-Id': $('studentId').value },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ recipientId: Number($('destinatario').value), content: $('contenido').value })
         });
         anotar(`POST /api/v1/messages → ${respuesta.status}`, respuesta.ok ? '' : 'error');
