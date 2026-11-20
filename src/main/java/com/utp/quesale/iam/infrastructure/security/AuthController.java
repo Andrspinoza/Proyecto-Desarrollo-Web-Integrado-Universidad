@@ -25,13 +25,14 @@ public class AuthController {
     private final JwtService jwt;
     private final EmailVerificationCommandHandler verification;
     private final EmailVerificationRepository verificationRepository;
+    private final AuthRateLimiter limiter;
     private final BCryptPasswordEncoder passwords = new BCryptPasswordEncoder();
     private final String dummyHash = passwords.encode("dummy-password-not-a-valid-account");
     public AuthController(AccountJpaRepository accounts, CreateStudentCommandHandler students,
                           IamContextFacade iam, JwtService jwt, EmailVerificationCommandHandler verification,
-                          EmailVerificationRepository verificationRepository) {
+                          EmailVerificationRepository verificationRepository, AuthRateLimiter limiter) {
         this.accounts = accounts; this.students = students; this.iam = iam; this.jwt = jwt; this.verification = verification;
-        this.verificationRepository = verificationRepository;
+        this.verificationRepository = verificationRepository; this.limiter = limiter;
     }
     public record Registration(@NotNull @Positive Long universityId, @NotBlank @Email @Size(max=120) String email,
                                @NotBlank @Size(min=8,max=72) String password,
@@ -51,18 +52,29 @@ public class AuthController {
     }
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody Login body) {
-        var account = accounts.findByEmailIgnoreCase(body.email().trim()).orElse(null);
+        String email = body.email().trim();
+        if (limiter.emailBlocked(email))
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos; espera unos minutos");
+        var account = accounts.findByEmailIgnoreCase(email).orElse(null);
         boolean valid = passwords.matches(body.password(), account == null ? dummyHash : account.getPasswordHash());
-        if (account == null || !valid)
+        if (account == null || !valid) {
+            limiter.recordFailure(email);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
+        }
+        limiter.clearFailures(email);
         if (!iam.isEmailVerified(account.getStudentId()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Verifica tu correo institucional primero");
         return new LoginResponse(jwt.issue(account.getStudentId()), "Bearer", 3600, account.getStudentId());
     }
     @PostMapping("/resend-verification") @ResponseStatus(HttpStatus.ACCEPTED)
     public void resend(@Valid @RequestBody Login body) {
-        var account = accounts.findByEmailIgnoreCase(body.email().trim()).orElse(null);
-        if (account != null && passwords.matches(body.password(), account.getPasswordHash()) && !iam.isEmailVerified(account.getStudentId())) {
+        String email = body.email().trim();
+        if (limiter.emailBlocked(email))
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos; espera unos minutos");
+        var account = accounts.findByEmailIgnoreCase(email).orElse(null);
+        boolean valid = passwords.matches(body.password(), account == null ? dummyHash : account.getPasswordHash());
+        if (account == null || !valid) limiter.recordFailure(email);
+        if (account != null && valid && !iam.isEmailVerified(account.getStudentId())) {
             if (verificationRepository.findLatestByStudentId(account.getStudentId()).isPresent())
                 verification.handle(new ResendEmailVerificationCommand(account.getStudentId()));
             else
