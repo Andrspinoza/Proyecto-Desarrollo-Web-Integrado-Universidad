@@ -30,7 +30,7 @@ public class JwtHttpFilter extends OncePerRequestFilter {
         }
         boolean publicRoute = ("POST".equals(method) && (path.equals("/api/v1/auth/login") || path.equals("/api/v1/auth/register") || path.equals("/api/v1/auth/resend-verification")
                 || path.equals("/api/v1/auth/forgot-password") || path.equals("/api/v1/auth/reset-password")))
-                || ("GET".equals(method) && (path.equals("/api/v1/universities") || path.matches("/api/v1/universities/[0-9]+")
+                || ("GET".equals(method) && (path.equals("/api/v1/universities") || path.matches("/api/v1/universities/[0-9]+") || path.matches("/api/v1/photos/[A-Za-z0-9-]{20,40}")
                 || path.equals("/api/v1/email-verifications/confirm")));
         if (publicRoute) { chain.doFilter(request, response); return; }
         if ((path.equals("/api/v1/students") && "POST".equals(method))

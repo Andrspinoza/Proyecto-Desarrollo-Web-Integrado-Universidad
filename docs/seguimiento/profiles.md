@@ -19,8 +19,9 @@ Solo Fernando edita este archivo, en el último commit de cada PR.
 | Resources y endpoints de Student | ✅ En main | PR #33 | POST /api/v1/students y GET /api/v1/students/{id}; ocho pruebas HTTP con MockMvc. Sin Account ni JWT; GET usa X-Student-Id |
 | Guardar y consultar mi perfil | ✅ | #51 | `GET /students/me` y `PUT /students/me/profile`: carrera, ciclo, sede, género, fecha de nacimiento (se publica solo la edad), visibilidad, intereses y habilidades |
 | Sembrado de catálogos | ✅ | #51 | 25 intereses y 10 habilidades con `SEED_UNIVERSITIES=true` |
+| Foto de perfil | ✅ | #52 | `PUT /students/me/photo` (JPEG, PNG o WebP de hasta 1 MB, tipo verificado por los bytes), `DELETE` y `GET /photos/{clave}` pública con clave aleatoria; se guarda en la base (tabla `student_photos`) y sale en `photoUrl` |
 | Endpoints de catálogos | En PR de catálogos | PR #36 | Resources, assemblers y controllers POST/GET de intereses y habilidades; diez pruebas HTTP. Creación con X-Student-Id como administrador provisional, sin validación de rol hasta Account y JWT |
 
-**Siguiente paso:** foto de perfil y recomendaciones con afinidad (`AffinityCalculator`) en PR aparte
+**Siguiente paso:** recomendaciones con afinidad (`AffinityCalculator`: intereses en común, misma carrera, ciclo cercano, misma sede) en PR aparte
 
 **Última actualización:** 2026-11-20 · André
