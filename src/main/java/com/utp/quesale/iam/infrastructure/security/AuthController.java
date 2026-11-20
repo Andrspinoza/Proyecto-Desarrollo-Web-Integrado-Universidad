@@ -7,6 +7,7 @@ import com.utp.quesale.iam.application.handlers.commands.EmailVerificationComman
 import com.utp.quesale.iam.domain.repositories.EmailVerificationRepository;
 import com.utp.quesale.profiles.application.commands.CreateStudentCommand;
 import com.utp.quesale.profiles.application.handlers.commands.CreateStudentCommandHandler;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.Locale;
 
+@Tag(name = "Auth", description = "Registro, inicio de sesión y restablecimiento de contraseña")
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {

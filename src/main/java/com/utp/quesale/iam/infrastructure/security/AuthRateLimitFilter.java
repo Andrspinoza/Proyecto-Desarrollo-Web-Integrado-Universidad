@@ -16,7 +16,8 @@ import java.util.Set;
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class AuthRateLimitFilter extends OncePerRequestFilter {
     private static final Set<String> LIMITED_PATHS = Set.of(
-            "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/resend-verification");
+            "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/resend-verification",
+            "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password");
 
     private final AuthRateLimiter limiter;
 
