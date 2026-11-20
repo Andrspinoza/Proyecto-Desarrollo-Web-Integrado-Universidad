@@ -10,7 +10,7 @@ Solo André edita este archivo, en el último commit de cada PR.
 | Capa de aplicación (B5) | ✅ | | Commands, queries, DTO, assembler y handlers de University; modelo para los demás módulos |
 | Resources y endpoints | ✅ | #3 | El controller usa los handlers de la capa de aplicación; prueba HTTP incluida |
 | Base de `shared` para la capa de aplicación | ✅ | #11 | Raíz de agregado pura y `DomainEventDispatcher` |
-| B7 parte 1: WebSocket del chat | ✅ | #25 | Starter, configuración STOMP en `/ws`, identidad por `studentId` (D-16), pruebas y página `chat-test.html` |
+| B7 parte 1: WebSocket del chat | ✅ | #25 | Starter, configuración STOMP en `/ws`, identidad por `studentId` (D-16), y pruebas |
 | B7 parte 2: entrega de `MessageSentEvent` | ✅ | #27 | `ChatMessageDto` y `MessageSentEventHandler` en `messaging`, con su prueba; entrega el mensaje al destinatario por `/user/queue/messages` |
 | Verificación de correo: dominio | 🔨 | #41 | `EmailVerification` y `VerificationToken` (solo se guarda el hash; vence a las 24 h) |
 | Verificación de correo: aplicación | 🔨 | #41 | Emitir, confirmar y reenviar (espera de 60 s); se emite al recibir `StudentRegisteredEvent`; fachada con `isEmailVerified` |

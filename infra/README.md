@@ -9,7 +9,7 @@ Navegador → Cloudflare (HTTPS) → túnel cloudflared (VPS 1) → Nginx 127.0.
 | Pieza | Dónde | Detalle |
 |---|---|---|
 | Frontend | `/opt/quesale-preview-20261119/html` | Lo publica el CD del repo del frontend por `rrsync` |
-| Nginx | contenedor `quesale-jwt-stage-frontend` | `infra/nginx/quesale-web.conf`: frontend, `/api`, `/ws`, Swagger y las páginas `*-test.html`. El archivo está montado: tras editarlo hay que **reiniciar** el contenedor, no solo recargar |
+| Nginx | contenedor `quesale-jwt-stage-frontend` | `infra/nginx/quesale-web.conf`: frontend, `/api`, `/ws`, y Swagger. El archivo está montado: tras editarlo hay que **reiniciar** el contenedor, no solo recargar |
 | API | contenedor `quesale-jwt-stage-api` | Jar por SHA en `/opt/quesale-releases`, entorno en `/etc/quesale/api.env` (no está en git) |
 | MySQL | contenedor `quesale-jwt-stage-mysql` | Volumen de Docker; sin alta disponibilidad |
 | Despliegue | `infra/deploy/quesale-deploy-api.sh` | Se instala como `/usr/local/sbin/quesale-deploy-api` y es el único comando permitido a la llave del CD (usuario `quesale-deploy`) |
