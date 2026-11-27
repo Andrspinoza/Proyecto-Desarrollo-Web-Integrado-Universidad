@@ -27,7 +27,8 @@ public class UniversityCatalogSeeder implements ApplicationRunner {
             new CreateUniversityCommand("Pontificia Universidad Católica del Perú", "pucp.edu.pe"),
             new CreateUniversityCommand("Universidad César Vallejo", "ucvvirtual.edu.pe"),
             new CreateUniversityCommand("Universidad Nacional Mayor de San Marcos", "unmsm.edu.pe"),
-            new CreateUniversityCommand("Universidad Privada Norbert Wiener", "uwiener.edu.pe")
+            new CreateUniversityCommand("Universidad Privada Norbert Wiener", "uwiener.edu.pe"),
+            new CreateUniversityCommand("Universidad Nacional de Trujillo", "unitru.edu.pe")
     );
 
     private final UniversityRepository repository;

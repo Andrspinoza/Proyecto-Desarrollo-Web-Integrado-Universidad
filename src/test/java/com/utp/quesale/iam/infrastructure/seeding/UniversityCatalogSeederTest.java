@@ -19,18 +19,18 @@ class UniversityCatalogSeederTest {
     private final UniversityCommandHandler handler = mock(UniversityCommandHandler.class);
     private final UniversityCatalogSeeder seeder = new UniversityCatalogSeeder(repository, handler);
 
-    @Test void catalogHasTenUniversitiesWithValidUniqueDomainsAndNames() {
+    @Test void catalogHasElevenUniversitiesWithValidUniqueDomainsAndNames() {
         var catalog = UniversityCatalogSeeder.CATALOG;
-        assertEquals(10, catalog.size());
-        assertEquals(10, new HashSet<>(catalog.stream().map(CreateUniversityCommand::emailDomain).toList()).size());
-        assertEquals(10, new HashSet<>(catalog.stream().map(CreateUniversityCommand::name).toList()).size());
+        assertEquals(11, catalog.size());
+        assertEquals(11, new HashSet<>(catalog.stream().map(CreateUniversityCommand::emailDomain).toList()).size());
+        assertEquals(11, new HashSet<>(catalog.stream().map(CreateUniversityCommand::name).toList()).size());
         catalog.forEach(command -> assertDoesNotThrow(() -> new EmailDomain(command.emailDomain())));
     }
 
     @Test void createsEveryUniversityWhenTheCatalogIsEmpty() {
         when(repository.existsByEmailDomain(anyString())).thenReturn(false);
         seeder.run(null);
-        verify(handler, times(10)).handle(any(CreateUniversityCommand.class));
+        verify(handler, times(11)).handle(any(CreateUniversityCommand.class));
     }
 
     @Test void skipsUniversitiesThatAlreadyExistByDomain() {
@@ -38,7 +38,7 @@ class UniversityCatalogSeederTest {
         when(repository.existsByEmailDomain("utp.edu.pe")).thenReturn(true);
         seeder.run(null);
         ArgumentCaptor<CreateUniversityCommand> captured = ArgumentCaptor.forClass(CreateUniversityCommand.class);
-        verify(handler, times(9)).handle(captured.capture());
+        verify(handler, times(10)).handle(captured.capture());
         List<String> domains = captured.getAllValues().stream().map(CreateUniversityCommand::emailDomain).toList();
         assertFalse(domains.contains("utp.edu.pe"));
         assertTrue(domains.contains("usil.pe"));
