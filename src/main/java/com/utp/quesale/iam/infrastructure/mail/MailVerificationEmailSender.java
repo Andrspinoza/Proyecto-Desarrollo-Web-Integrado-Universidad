@@ -2,12 +2,12 @@ package com.utp.quesale.iam.infrastructure.mail;
 
 import com.utp.quesale.iam.domain.exceptions.VerificationEmailDeliveryException;
 import com.utp.quesale.iam.domain.services.VerificationEmailSender;
+import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
@@ -33,23 +33,14 @@ public class MailVerificationEmailSender implements VerificationEmailSender {
             log.info("Correo de verificación para {} (SMTP no configurado): {}", toEmail, verificationLink);
             return;
         }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(from);
-        message.setTo(toEmail);
-        message.setSubject(SUBJECT);
-        message.setText(body(recipientName, verificationLink));
         try {
-            sender.send(message);
-        } catch (MailException ex) {
+            sender.send(EmailLayout.build(sender, from, toEmail, SUBJECT, recipientName,
+                    "Confirma que este correo es tuyo para terminar de crear tu cuenta.",
+                    "Confirmar mi correo", verificationLink,
+                    "Si no creaste una cuenta en ¿Qué sale?, ignora este mensaje."));
+        } catch (MailException | MessagingException ex) {
             log.warn("Falló el envío del correo de verificación a {}: {}", toEmail, ex.getMessage());
             throw new VerificationEmailDeliveryException();
         }
-    }
-
-    private static String body(String recipientName, String verificationLink) {
-        return "Hola " + recipientName + ",\n\n"
-                + "Confirma que este correo es tuyo abriendo el siguiente enlace:\n"
-                + verificationLink + "\n\n"
-                + "Si no creaste una cuenta en ¿Qué sale?, ignora este mensaje.\n";
     }
 }
