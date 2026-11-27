@@ -1,11 +1,11 @@
 package com.utp.quesale.iam.infrastructure.mail;
 
+import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
@@ -30,17 +30,12 @@ public class PasswordResetEmailSender {
             log.info("Correo para restablecer la contraseña de {} (SMTP no configurado): {}", toEmail, resetLink);
             return;
         }
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(from);
-        message.setTo(toEmail);
-        message.setSubject(SUBJECT);
-        message.setText("Hola " + recipientName + ",\n\n"
-                + "Recibimos una solicitud para restablecer tu contraseña. Abre este enlace para elegir una nueva; vence en 1 hora:\n"
-                + resetLink + "\n\n"
-                + "Si no la pediste tú, ignora este mensaje: tu contraseña sigue igual.\n");
         try {
-            sender.send(message);
-        } catch (MailException ex) {
+            sender.send(EmailLayout.build(sender, from, toEmail, SUBJECT, recipientName,
+                    "Recibimos una solicitud para restablecer tu contraseña. El enlace vence en 1 hora.",
+                    "Elegir nueva contraseña", resetLink,
+                    "Si no la pediste tú, ignora este mensaje: tu contraseña sigue igual."));
+        } catch (MailException | MessagingException ex) {
             log.warn("Falló el envío del correo de restablecimiento a {}: {}", toEmail, ex.getMessage());
             throw new IllegalStateException("Password reset email could not be delivered", ex);
         }
